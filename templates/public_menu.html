@@ -375,9 +375,9 @@
                     <label for="priceFilter" data-i18n="filter_by_price">Filter by Price</label>
                     <select id="priceFilter">
                         <option value="all" data-i18n="all_prices">All Prices</option>
-                        <option value="low" data-i18n="under_15">Under $15</option>
-                        <option value="medium" data-i18n="15_to_30">$15 - $30</option>
-                        <option value="high" data-i18n="over_30">Over $30</option>
+                        <option value="low" data-i18n="under_15">Under ₺15</option>
+                        <option value="medium" data-i18n="15_to_30">₺15 - ₺30</option>
+                        <option value="high" data-i18n="over_30">Over ₺30</option>
                     </select>
                 </div>
 
@@ -425,9 +425,9 @@
             beverages: 'Beverages',
             filter_by_price: 'Filter by Price',
             all_prices: 'All Prices',
-            under_15: 'Under $15',
-            '15_to_30': '$15 - $30',
-            over_30: 'Over $30',
+            under_15: 'Under ₺15',
+            '15_to_30': '₺15 - ₺30',
+            over_30: 'Over ₺30',
             sort_by: 'Sort By',
             name: 'Name',
             price_low_to_high: 'Price: Low to High',
@@ -450,9 +450,9 @@
             beverages: 'المشروبات',
             filter_by_price: 'تصفية حسب السعر',
             all_prices: 'جميع الأسعار',
-            under_15: 'أقل من 15 دولار',
-            '15_to_30': '15 - 30 دولار',
-            over_30: 'أكثر من 30 دولار',
+            under_15: 'أقل من 15 ليرة تركية',
+            '15_to_30': '15 - 30 ليرة تركية',
+            over_30: 'أكثر من 30 ليرة تركية',
             sort_by: 'ترتيب حسب',
             name: 'الاسم',
             price_low_to_high: 'السعر: من الأقل للأعلى',
@@ -475,9 +475,9 @@
             beverages: 'İçecekler',
             filter_by_price: 'Fiyata Göre Filtrele',
             all_prices: 'Tüm Fiyatlar',
-            under_15: '15$ Altı',
-            '15_to_30': '15$ - 30$',
-            over_30: '30$ Üzeri',
+            under_15: '15₺ Altı',
+            '15_to_30': '15₺ - 30₺',
+            over_30: '30₺ Üzeri',
             sort_by: 'Sırala',
             name: 'İsim',
             price_low_to_high: 'Fiyat: Düşükten Yükseğe',
@@ -570,7 +570,7 @@
                                         <h3 class="menu-item-title">${item.name}</h3>
                                         <p class="menu-item-description">${item.description || 'Delicious dish prepared with fresh ingredients.'}</p>
                                         <div class="menu-item-meta">
-                                            <div class="menu-item-price ${!isAvailable ? 'unavailable' : ''}">$${parseFloat(item.price).toFixed(2)}</div>
+                                            <div class="menu-item-price ${!isAvailable ? 'unavailable' : ''}">₺${parseFloat(item.price).toFixed(2)}</div>
                                             ${item.preparation_time ? `<div class="menu-item-time">${t('preparation_time')}: ${item.preparation_time} ${t('minutes')}</div>` : ''}
                                         </div>
                                     </div>
