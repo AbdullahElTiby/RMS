@@ -163,10 +163,11 @@ class Ingredient(db.Model):
     __tablename__ = 'ingredients'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    unit = db.Column(db.String(20), nullable=False)  # kg, g, l, ml, pieces, etc.
+    unit = db.Column(db.String(20), nullable=False)
     current_stock = db.Column(db.Float, default=0)
     min_stock = db.Column(db.Float, default=0)
-    cost_per_unit = db.Column(db.Float)
+    # ✅ Added default=0.0 to ensure new records always have a numeric value
+    cost_per_unit = db.Column(db.Float, default=0.0)
     supplier = db.Column(db.String(100))
     last_restocked = db.Column(db.DateTime)
 
@@ -1058,16 +1059,21 @@ def handle_order_payments(order_id):
 def handle_inventory():
     if request.method == 'POST':
         data = request.get_json()
+        # ✅ FIXED: Explicitly set cost_per_unit to 0.0 if not provided, otherwise use the provided value
+        cost_per_unit = data.get('cost_per_unit')
+        if cost_per_unit is None:
+            cost_per_unit = 0.0  # Default to 0.0 if not specified
+
         new_ingredient = Ingredient(
             name=data['name'],
             unit=data['unit'],
             min_stock=data['min_stock'],
-            current_stock=0  # Ingredients start with 0 stock
+            current_stock=0,
+            cost_per_unit=cost_per_unit  # ✅ Now we're setting it properly!
         )
         db.session.add(new_ingredient)
         db.session.commit()
         return jsonify({'message': 'Ingredient added', 'id': new_ingredient.id}), 201
-    
     elif request.method == 'GET':
         ingredients = Ingredient.query.all()
         return jsonify([{
@@ -1076,7 +1082,7 @@ def handle_inventory():
             'unit': ing.unit,
             'current_stock': ing.current_stock,
             'min_stock': ing.min_stock,
-            'cost_per_unit': ing.cost_per_unit,
+            'cost_per_unit': ing.cost_per_unit,  # This will now be 0.0 for new items
             'supplier': ing.supplier,
             'status': 'low' if ing.current_stock <= ing.min_stock else 'adequate'
         } for ing in ingredients])

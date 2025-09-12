@@ -439,9 +439,16 @@
     }
     
     async function openNewOrderModal() {
-        await loadPrerequisites();
-        document.getElementById('orderModal').style.display = 'block';
-        addOrderItemRow(); // Add the first item row
+        const createBtn = document.querySelector('.btn-primary[data-i18n="create_order"]');
+        if (createBtn) createBtn.disabled = true;
+
+        try {
+            await loadPrerequisites();
+            document.getElementById('orderModal').style.display = 'block';
+            addOrderItemRow(); // Add the first item row
+        } finally {
+            if (createBtn) createBtn.disabled = false;
+        }
     }
     
     function closeModal() {
@@ -452,7 +459,7 @@
     
     async function loadPrerequisites() {
         // Load business model settings
-        loadBusinessModelSettings();
+        await loadBusinessModelSettings(); // FIXED: Added await here
 
         // Populate order types based on business model
         populateOrderTypes();

@@ -405,7 +405,10 @@
             return;
         }
         inventory.forEach(item => {
-            const costDisplay = item.cost_per_unit ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}` : '-';
+            // FIXED: Check for null/undefined specifically instead of truthy value
+            const costDisplay = item.cost_per_unit !== null && item.cost_per_unit !== undefined
+                ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}`
+                : '-';
             const row = `
                 <tr>
                     <td>${item.name}</td>
@@ -465,37 +468,53 @@
     }
 
     async function openEditModal(id) {
-        // In a real app, you would fetch the specific ingredient details
-        // For simplicity, we find it from the already loaded data, but a fetch is better
-        const response = await fetch('/api/inventory'); // Re-fetch to ensure data is current
+        // Force refresh inventory before editing to ensure we have latest data
+        const response = await fetch('/api/inventory');
         const inventory = await response.json();
         const item = inventory.find(i => i.id === id);
+
+        if (!item) {
+            alert('Ingredient not found. Please refresh the page.');
+            return;
+        }
 
         document.getElementById('modalTitle').textContent = t('edit_ingredient');
         document.getElementById('ingredientId').value = item.id;
         document.getElementById('name').value = item.name;
         document.getElementById('unit').value = item.unit;
         document.getElementById('minStock').value = item.min_stock;
-        document.getElementById('costPerUnit').value = item.cost_per_unit || '';
+        
+        // Handle cost_per_unit properly (including 0)
+        document.getElementById('costPerUnit').value = item.cost_per_unit != null ? item.cost_per_unit : '';
         document.getElementById('ingredientModal').style.display = 'block';
     }
 
     async function openRestockModal(id, name, currentStock) {
-        // Fetch the ingredient details to get the cost
+        // Force refresh inventory to get latest cost_per_unit
         const response = await fetch('/api/inventory');
         const inventory = await response.json();
         const item = inventory.find(i => i.id === id);
 
+        if (!item) {
+            alert('Ingredient not found. Please refresh the page.');
+            return;
+        }
+
         document.getElementById('restockIngredientId').value = id;
         document.getElementById('restockItemName').textContent = name;
         document.getElementById('restockCurrentStock').textContent = currentStock;
-        document.getElementById('restockCostPerUnit').textContent = item.cost_per_unit ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}` : '-';
+        
+        // Properly handle cost_per_unit values (including 0)
+        document.getElementById('restockCostPerUnit').textContent = item.cost_per_unit !== null && item.cost_per_unit !== undefined
+            ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}`
+            : '-';
+        
         document.getElementById('totalCost').textContent = '0.00';
         document.getElementById('restockForm').reset();
         document.getElementById('restockModal').style.display = 'block';
 
         // Store cost for calculation
-        document.getElementById('restockModal').dataset.costPerUnit = item.cost_per_unit || 0;
+        document.getElementById('restockModal').dataset.costPerUnit = item.cost_per_unit != null ? item.cost_per_unit : 0;
     }
 
     function closeModal() {
@@ -523,14 +542,18 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            
             if (response.ok) {
                 closeModal();
-                loadInventory();
+                // Force reload inventory immediately after save
+                await loadInventory();
             } else {
-                alert('Failed to save ingredient.');
+                const errorData = await response.json();
+                alert(`Failed to save ingredient: ${errorData.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error saving ingredient:', error);
+            alert('Failed to save ingredient. Please try again.');
         }
     });
 
@@ -548,12 +571,15 @@
             });
             if (response.ok) {
                 closeModal();
-                loadInventory();
+                // Force reload inventory immediately after restock
+                await loadInventory();
             } else {
-                alert('Failed to restock ingredient.');
+                const errorData = await response.json();
+                alert(`Failed to restock ingredient: ${errorData.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error restocking ingredient:', error);
+            alert('Failed to restock ingredient. Please try again.');
         }
     });
 
@@ -564,7 +590,7 @@
         try {
             const response = await fetch(`/api/inventory/${id}`, { method: 'DELETE' });
             if (response.ok) {
-                loadInventory();
+                await loadInventory();
             } else {
                 const data = await response.json().catch(() => ({}));
                 alert(data.message || 'Failed to remove ingredient.');
@@ -669,7 +695,7 @@
                     });
                     if (response.ok) {
                         closeSpoilModal();
-                        loadInventory();
+                        await loadInventory();
                         alert(t('spoil_success'));
                     } else {
                         const errorData = await response.json();
