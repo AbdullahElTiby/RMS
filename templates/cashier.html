@@ -1,0 +1,1309 @@
+{% extends "base.html" %}
+
+{% block title %}Cashier - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* Override base template styles for full-screen POS */
+        .sidebar {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+            max-width: 100vw !important;
+            width: 100vw !important;
+        }
+
+        /* Full-screen POS layout */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Language Selector for Cashier */
+        .cashier-language-selector {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(64, 64, 64, 0.9);
+            border-radius: 8px;
+            padding: 8px 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cashier-language-selector select {
+            background: rgba(85, 85, 85, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .cashier-language-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .cashier-language-selector select option {
+            background: #333;
+            color: white;
+        }
+
+        .pos-container {
+            display: flex;
+            height: 100vh;
+            background: #1a1a1a;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        /* Left Panel - Menu Items */
+        .menu-panel {
+            flex: 2;
+            background: #2d2d2d;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #404040;
+        }
+
+        .categories {
+            display: flex;
+            background: #404040;
+            padding: 20px;
+            gap: 15px;
+            overflow-x: auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .category-btn.active {
+            background: #667eea;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+        }
+
+        .category-btn:hover {
+            background: #666;
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .items-grid {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 120px;
+            justify-content: space-between;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .menu-item.selected {
+            border: 3px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .menu-item.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .inventory-warning {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .menu-item {
+            position: relative;
+        }
+
+        .menu-item-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #333;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .menu-item-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .menu-item-image {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #999;
+            flex-shrink: 0;
+        }
+
+        /* Right Panel - Order & Payment */
+        .order-panel {
+            flex: 1;
+            background: #252525;
+            display: flex;
+            flex-direction: column;
+            min-width: 400px;
+        }
+
+        .order-header {
+            background: #404040;
+            padding: 20px;
+            color: white;
+            border-bottom: 2px solid #555;
+        }
+
+        .order-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .order-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .order-type-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .order-type-btn.active {
+            background: #667eea;
+        }
+
+        .order-type-btn:hover {
+            background: #666;
+        }
+
+        .order-items {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .order-item-price {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .order-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            background: #555;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: #666;
+        }
+
+        .quantity-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            background: #c82333;
+        }
+
+        .order-totals {
+            background: #404040;
+            padding: 20px;
+            border-top: 2px solid #555;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .total-row.final {
+            font-size: 18px;
+            font-weight: 700;
+            border-top: 1px solid #666;
+            padding-top: 10px;
+            color: #667eea;
+        }
+
+        .payment-section {
+            background: #333;
+            padding: 20px;
+            border-top: 2px solid #555;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .payment-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .payment-btn:hover {
+            background: #666;
+            transform: translateY(-1px);
+        }
+
+        .payment-btn.active {
+            background: #28a745;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #666;
+            border-radius: 8px;
+            background: #404040;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .pay-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .pay-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Receipt Modal */
+        .receipt-modal .modal-content {
+            max-width: 500px;
+            min-height: 600px;
+        }
+
+        .receipt-modal .receipt {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .receipt-total {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-weight: bold;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .pos-container {
+                flex-direction: column;
+            }
+            .menu-panel {
+                flex: none;
+                height: 50vh;
+            }
+            .order-panel {
+                flex: none;
+                height: 50vh;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .categories {
+                padding: 5px;
+                gap: 5px;
+            }
+            .category-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                padding: 10px;
+            }
+            .menu-item {
+                padding: 10px;
+                min-height: 100px;
+            }
+            .menu-item-name {
+                font-size: 12px;
+            }
+            .menu-item-price {
+                font-size: 14px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<!-- Language Selector for Cashier -->
+<div class="cashier-language-selector">
+    <select id="cashierLangSelect">
+        <option value="en">🇺🇸 English</option>
+        <option value="ar">🇸🇦 العربية</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+    </select>
+</div>
+
+<div class="pos-container">
+    <!-- Menu Panel -->
+    <div class="menu-panel">
+        <!-- Categories View -->
+        <div class="categories-view" id="categoriesView">
+            <div class="categories" id="categories">
+                <!-- Categories will be loaded dynamically -->
+            </div>
+        </div>
+
+        <!-- Items Grid -->
+        <div class="items-grid" id="itemsGrid">
+            <!-- Menu items will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Order Panel -->
+    <div class="order-panel">
+        <!-- Order Header -->
+        <div class="order-header">
+            <h2 data-i18n="current_order">Current Order</h2>
+            <div class="order-type-selector">
+                <button class="order-type-btn active" data-type="dine-in" data-i18n="dine_in">Dine-In</button>
+                <button class="order-type-btn" data-type="takeaway" data-i18n="takeaway">Takeaway</button>
+                <button class="order-type-btn" data-type="delivery" data-i18n="delivery">Delivery</button>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="order-items" id="orderItems">
+            <div class="empty-order" style="text-align: center; color: #999; padding: 40px;">
+                <div data-i18n="no_items_in_order">No items in order</div>
+                <small data-i18n="click_menu_items">Click on menu items to add them</small>
+            </div>
+        </div>
+
+        <!-- Order Totals -->
+        <div class="order-totals" id="orderTotals" style="display: none;">
+            <div class="total-row">
+                <span data-i18n="subtotal">Subtotal:</span>
+                <span id="subtotal">₺0.00</span>
+            </div>
+            <div class="total-row">
+                <span data-i18n="tax">Tax (10%):</span>
+                <span id="tax">₺0.00</span>
+            </div>
+            <div class="total-row final">
+                <span data-i18n="total">Total:</span>
+                <span id="total">₺0.00</span>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="payment-section" id="paymentSection" style="display: none;">
+            <div class="payment-methods">
+                <button class="payment-btn" data-method="cash" data-i18n="cash">Cash</button>
+                <button class="payment-btn" data-method="card" data-i18n="card">Card</button>
+            </div>
+            <input type="number" class="amount-input" id="paymentAmount" placeholder="Enter payment amount" step="0.01" data-i18n-placeholder="enter_payment_amount">
+            <div class="action-buttons">
+                <button class="action-btn pay-btn" id="payBtn" disabled data-i18n="complete_payment">Complete Payment</button>
+                <button class="action-btn clear-btn" id="clearBtn" data-i18n="clear_order">Clear Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal receipt-modal" id="receiptModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-i18n="receipt">Receipt</h3>
+            <!-- Close button removed - user must print to close -->
+        </div>
+        <div class="receipt" id="receiptContent">
+            <!-- Receipt content will be generated here -->
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: 500;">
+                ⚠️ Please print the receipt to complete the transaction
+            </div>
+            <button class="action-btn pay-btn" onclick="printAndCloseReceipt()" data-i18n="print_receipt">Print Receipt</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let menuItems = [];
+    let currentOrder = {
+        type: 'dine-in',
+        items: [],
+        table_id: null,
+        customer_id: null
+    };
+    let selectedPaymentMethod = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadMenuItems();
+        setupEventListeners();
+        updateOrderDisplay();
+        initCashierLanguageSelector();
+    });
+
+    // Load menu items
+    async function loadMenuItems() {
+        try {
+            const response = await fetch('/api/menu');
+            const items = await response.json();
+            menuItems = items;
+            generateCategories(items);
+            displayMenuItems(items, 'all'); // Display all items initially
+        } catch (error) {
+            console.error('Error loading menu items:', error);
+        }
+    }
+
+    // Display menu items
+    function displayMenuItems(items, category = 'all') {
+        const grid = document.getElementById('itemsGrid');
+        grid.innerHTML = '';
+
+        const filteredItems = category === 'all' ? items : items.filter(item => item.category === category);
+
+        filteredItems.forEach(item => {
+            // Check both manual availability and inventory availability
+            const isAvailable = item.is_available && item.inventory_available;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `menu-item ${isAvailable ? '' : 'unavailable'}`;
+            itemDiv.onclick = () => isAvailable && addItemToOrder(item);
+
+            // Add visual indicator for inventory issues
+            const inventoryIndicator = !item.inventory_available ? '<div class="inventory-warning">⚠️ Out of stock</div>' : '';
+
+            itemDiv.innerHTML = `
+                <div class="menu-item-image">
+                    ${item.image_url ? `<img src="${item.image_url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` : '🍽️'}
+                </div>
+                <div class="menu-item-name">${item.name}</div>
+                <div class="menu-item-price">₺${item.price.toFixed(2)}</div>
+                ${inventoryIndicator}
+            `;
+
+            grid.appendChild(itemDiv);
+        });
+    }
+
+    // Generate category buttons
+    function generateCategories(items) {
+        const categoriesDiv = document.getElementById('categories');
+        const existingButtons = categoriesDiv.querySelectorAll('.category-btn');
+        existingButtons.forEach(btn => btn.remove());
+
+        const categories = [...new Set(items.map(item => item.category))];
+
+        categories.forEach(category => {
+            const btn = document.createElement('button');
+            btn.className = 'category-btn';
+            btn.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+            btn.onclick = () => selectCategory(category);
+            categoriesDiv.appendChild(btn);
+        });
+    }
+
+    // Select category and show items
+    function selectCategory(category) {
+        // Display items for selected category
+        displayMenuItems(menuItems, category);
+
+        // Update active category button
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // Show categories view
+    function showCategoriesView() {
+        document.getElementById('categoriesView').style.display = 'block';
+        document.getElementById('itemsView').classList.remove('active');
+    }
+
+    // Show items view
+    function showItemsView() {
+        document.getElementById('categoriesView').style.display = 'none';
+        document.getElementById('itemsView').classList.add('active');
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Order type buttons
+        document.querySelectorAll('.order-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentOrder.type = this.dataset.type;
+            });
+        });
+
+        // Payment method buttons
+        document.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedPaymentMethod = this.dataset.method;
+                updatePayButton();
+            });
+        });
+
+        // Payment amount input
+        document.getElementById('paymentAmount').addEventListener('input', updatePayButton);
+
+        // Pay button
+        document.getElementById('payBtn').addEventListener('click', processPayment);
+
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', clearOrder);
+    }
+
+    // Add item to order
+    function addItemToOrder(item) {
+        if (!item.is_available) return;
+
+        const existingItem = currentOrder.items.find(orderItem => orderItem.menu_item_id === item.id);
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            currentOrder.items.push({
+                menu_item_id: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: 1
+            });
+        }
+
+        updateOrderDisplay();
+    }
+
+    // Update order item quantity
+    function updateItemQuantity(itemId, change) {
+        const item = currentOrder.items.find(item => item.menu_item_id === itemId);
+        if (item) {
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                currentOrder.items = currentOrder.items.filter(item => item.menu_item_id !== itemId);
+            }
+            updateOrderDisplay();
+        }
+    }
+
+    // Remove item from order
+    function removeItemFromOrder(itemId) {
+        currentOrder.items = currentOrder.items.filter(item => item.menu_item_id !== itemId);
+        updateOrderDisplay();
+    }
+
+    // Update order display
+    function updateOrderDisplay() {
+        const orderItemsDiv = document.getElementById('orderItems');
+        const orderTotalsDiv = document.getElementById('orderTotals');
+        const paymentSection = document.getElementById('paymentSection');
+
+        if (currentOrder.items.length === 0) {
+            orderItemsDiv.innerHTML = `
+                <div class="empty-order" style="text-align: center; color: #999; padding: 40px;">
+                    <div>${getTranslation('no_items_in_order')}</div>
+                    <small>${getTranslation('click_menu_items')}</small>
+                </div>
+            `;
+            orderTotalsDiv.style.display = 'none';
+            paymentSection.style.display = 'none';
+            return;
+        }
+
+        // Display order items
+        orderItemsDiv.innerHTML = '';
+        currentOrder.items.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'order-item';
+            itemDiv.innerHTML = `
+                <div class="order-item-info">
+                    <div class="order-item-name">${item.name}</div>
+                    <div class="order-item-price">₺${item.price.toFixed(2)} ${getTranslation('each')}</div>
+                </div>
+                <div class="order-item-controls">
+                    <button class="quantity-btn" onclick="updateItemQuantity(${item.menu_item_id}, -1)">-</button>
+                    <span class="quantity-display">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="updateItemQuantity(${item.menu_item_id}, 1)">+</button>
+                    <button class="remove-btn" onclick="removeItemFromOrder(${item.menu_item_id})">×</button>
+                </div>
+            `;
+            orderItemsDiv.appendChild(itemDiv);
+        });
+
+        // Calculate totals
+        const subtotal = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.1;
+        const total = subtotal + tax;
+
+        // Update totals display
+        document.getElementById('subtotal').textContent = `₺${subtotal.toFixed(2)}`;
+        document.getElementById('tax').textContent = `₺${tax.toFixed(2)}`;
+        document.getElementById('total').textContent = `₺${total.toFixed(2)}`;
+
+        orderTotalsDiv.style.display = 'block';
+        paymentSection.style.display = 'block';
+
+        // Payment amount field is left empty for manual entry
+        updatePayButton();
+    }
+
+    // Update pay button state
+    function updatePayButton() {
+        const payBtn = document.getElementById('payBtn');
+        const amount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+        const total = parseFloat(document.getElementById('total').textContent.replace('₺', '')) || 0;
+
+        payBtn.disabled = !selectedPaymentMethod || amount < total;
+        if (amount >= total) {
+            payBtn.textContent = getTranslation('complete_payment');
+        } else {
+            const moreAmount = (total - amount).toFixed(2);
+            payBtn.textContent = getTranslation('pay_more').replace('{amount}', moreAmount);
+        }
+    }
+
+    // Process payment
+    async function processPayment() {
+        if (!selectedPaymentMethod) return;
+
+        const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+        const total = parseFloat(document.getElementById('total').textContent.replace('₺', ''));
+
+        if (paymentAmount < total) {
+            alert(getTranslation('payment_insufficient'));
+            return;
+        }
+
+        showLoading();
+
+        try {
+            // Create order
+            const orderData = {
+                order_type: currentOrder.type,
+                items: currentOrder.items.map(item => ({
+                    menu_item_id: item.menu_item_id,
+                    quantity: item.quantity
+                }))
+            };
+
+            const orderResponse = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
+
+            if (!orderResponse.ok) {
+                throw new Error('Failed to create order');
+            }
+
+            const orderResult = await orderResponse.json();
+            const orderId = orderResult.order_id;
+
+            // Process payment
+            const paymentData = {
+                amount: paymentAmount,
+                method: selectedPaymentMethod,
+                transaction_id: `POS-${Date.now()}`
+            };
+
+            const paymentResponse = await fetch(`/api/orders/${orderId}/payments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(paymentData)
+            });
+
+            if (!paymentResponse.ok) {
+                throw new Error('Failed to process payment');
+            }
+
+            // Show receipt
+            showReceipt(orderId, paymentAmount);
+
+            // Clear order
+            clearOrder();
+
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert(getTranslation('payment_failed'));
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Show receipt
+    async function showReceipt(orderId, paymentAmount) {
+        try {
+            const response = await fetch(`/api/orders/${orderId}`);
+            const order = await response.json();
+
+            const receiptDiv = document.getElementById('receiptContent');
+            const total = order.final_amount || 0;
+            const change = paymentAmount - total;
+
+            const receiptHtml = `
+                <div class="receipt-header">
+                    <strong>${getTranslation('restaurant_receipt')}</strong><br>
+                    ${getTranslation('order_number')}${orderId}<br>
+                    ${new Date().toLocaleString()}
+                </div>
+                ${order.items.map(item => `
+                    <div class="receipt-item">
+                        <span>${item.menu_item_name} x${item.quantity}</span>
+                        <span>₺${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `).join('')}
+                <div class="receipt-total">
+                    <div class="receipt-item">
+                        <span><strong>${getTranslation('total')}:</strong></span>
+                        <span><strong>₺${total.toFixed(2)}</strong></span>
+                    </div>
+                    <div class="receipt-item">
+                        <span>${getTranslation('paid')}:</span>
+                        <span>₺${paymentAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span>${getTranslation('change')}:</span>
+                        <span>₺${change.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 10px; font-size: 10px;">
+                    ${getTranslation('thank_you')}
+                </div>
+            `;
+
+        receiptDiv.innerHTML = receiptHtml;
+        document.getElementById('receiptModal').style.display = 'flex';
+
+        // Receipt will only print when manually clicked
+
+        } catch (error) {
+            console.error('Error loading receipt:', error);
+        }
+    }
+
+    // Print receipt and close modal
+    function printAndCloseReceipt() {
+        const receiptContent = document.getElementById('receiptContent').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Receipt</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 20px; }
+                        .receipt-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                        .receipt-total { border-top: 1px solid #000; padding-top: 5px; margin-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    ${receiptContent}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+
+        // Close the modal after printing
+        setTimeout(() => {
+            closeReceiptModal();
+        }, 500);
+    }
+
+    // Close receipt modal
+    function closeReceiptModal() {
+        document.getElementById('receiptModal').style.display = 'none';
+    }
+
+    // Clear order
+    function clearOrder() {
+        currentOrder.items = [];
+        selectedPaymentMethod = null;
+        document.getElementById('paymentAmount').value = '';
+        document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+        updateOrderDisplay();
+    }
+
+    // Loading functions
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // F1-F2 for payment methods
+        if (e.key === 'F1') {
+            e.preventDefault();
+            selectPaymentMethod('cash');
+        } else if (e.key === 'F2') {
+            e.preventDefault();
+            selectPaymentMethod('card');
+        } else if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            if (!document.getElementById('payBtn').disabled) {
+                processPayment();
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            clearOrder();
+        }
+    });
+
+    function selectPaymentMethod(method) {
+        document.querySelectorAll('.payment-btn').forEach(btn => {
+            if (btn.dataset.method === method) {
+                btn.click();
+            }
+        });
+    }
+
+    // Cashier Language Selector
+    function initCashierLanguageSelector() {
+        const langSelect = document.getElementById('cashierLangSelect');
+        if (langSelect) {
+            // Get initial language from localStorage or default to 'en'
+            const savedLang = localStorage.getItem('cashier_lang') || 'en';
+            langSelect.value = savedLang;
+            updateCashierLanguage(savedLang);
+
+            // Listen for language changes
+            langSelect.addEventListener('change', function() {
+                const selectedLang = this.value;
+                localStorage.setItem('cashier_lang', selectedLang);
+                updateCashierLanguage(selectedLang);
+
+                // Set document direction for RTL languages
+                if (selectedLang === 'ar') {
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.body.style.textAlign = 'right';
+                } else {
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.body.style.textAlign = 'left';
+                }
+            });
+
+            // Set initial direction based on saved language
+            if (savedLang === 'ar') {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.body.style.textAlign = 'right';
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.body.style.textAlign = 'left';
+            }
+        }
+    }
+
+    // Global translation object
+    let currentTranslations = {};
+
+    // Update cashier page language
+    function updateCashierLanguage(lang) {
+        // Translation object for cashier page
+        const cashierTranslations = {
+            en: {
+                current_order: 'Current Order',
+                dine_in: 'Dine-In',
+                takeaway: 'Takeaway',
+                delivery: 'Delivery',
+                no_items_in_order: 'No items in order',
+                click_menu_items: 'Click on menu items to add them',
+                subtotal: 'Subtotal:',
+                tax: 'Tax (10%):',
+                total: 'Total:',
+                cash: 'Cash',
+                card: 'Card',
+                mobile: 'Mobile',
+                online: 'Online',
+                enter_payment_amount: 'Enter payment amount',
+                complete_payment: 'Complete Payment',
+                clear_order: 'Clear Order',
+                back_to_categories: '← Back to Categories',
+                category_items: 'Category Items',
+                receipt: 'Receipt',
+                print_receipt: 'Print Receipt',
+                close: 'Close',
+                each: 'each',
+                restaurant_receipt: 'Restaurant Receipt',
+                order_number: 'Order #',
+                paid: 'Paid:',
+                change: 'Change:',
+                thank_you: 'Thank you for your business!',
+                payment_insufficient: 'Payment amount is less than total amount',
+                payment_failed: 'Payment failed. Please try again.',
+                pay_more: 'Pay ₺{amount} more'
+            },
+            ar: {
+                current_order: 'الطلب الحالي',
+                dine_in: 'تناول في المطعم',
+                takeaway: 'سفري',
+                delivery: 'توصيل',
+                no_items_in_order: 'لا توجد عناصر في الطلب',
+                click_menu_items: 'انقر على عناصر القائمة لإضافتها',
+                subtotal: 'المجموع الفرعي:',
+                tax: 'الضريبة (10%):',
+                total: 'المجموع:',
+                cash: 'نقدي',
+                card: 'بطاقة',
+                mobile: 'موبايل',
+                online: 'عبر الإنترنت',
+                enter_payment_amount: 'أدخل مبلغ الدفع',
+                complete_payment: 'إكمال الدفع',
+                clear_order: 'مسح الطلب',
+                back_to_categories: 'العودة إلى الفئات',
+                category_items: 'عناصر الفئة',
+                receipt: 'الفاتورة',
+                print_receipt: 'طباعة الفاتورة',
+                close: 'إغلاق',
+                each: 'لكل',
+                restaurant_receipt: 'فاتورة المطعم',
+                order_number: 'رقم الطلب #',
+                paid: 'المدفوع:',
+                change: 'الباقي:',
+                thank_you: 'شكراً لزيارتكم!',
+                payment_insufficient: 'مبلغ الدفع أقل من المجموع',
+                payment_failed: 'فشل الدفع. يرجى المحاولة مرة أخرى.',
+                pay_more: 'ادفع ₺{amount} أكثر'
+            },
+            tr: {
+                current_order: 'Mevcut Sipariş',
+                dine_in: 'Yemekte',
+                takeaway: 'Paket',
+                delivery: 'Teslimat',
+                no_items_in_order: 'Siparişte öğe yok',
+                click_menu_items: 'Öğeleri eklemek için menü öğelerine tıklayın',
+                subtotal: 'Ara toplam:',
+                tax: 'Vergi (%10):',
+                total: 'Toplam:',
+                cash: 'Nakit',
+                card: 'Kart',
+                mobile: 'Mobil',
+                online: 'Çevrimiçi',
+                enter_payment_amount: 'Ödeme tutarını girin',
+                complete_payment: 'Ödemeyi Tamamla',
+                clear_order: 'Siparişi Temizle',
+                back_to_categories: '← Kategorilere Dön',
+                category_items: 'Kategori Öğeleri',
+                receipt: 'Fiş',
+                print_receipt: 'Fişi Yazdır',
+                close: 'Kapat',
+                each: 'adet',
+                restaurant_receipt: 'Restoran Fişi',
+                order_number: 'Sipariş #',
+                paid: 'Ödenen:',
+                change: 'Para Üstü:',
+                thank_you: 'İşiniz için teşekkürler!',
+                payment_insufficient: 'Ödeme tutarı toplam tutardan az',
+                payment_failed: 'Ödeme başarısız. Lütfen tekrar deneyin.',
+                pay_more: '₺{amount} daha öde'
+            }
+        };
+
+        currentTranslations = cashierTranslations[lang] || cashierTranslations.en;
+
+        // Update all elements with data-i18n attributes
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (currentTranslations[key]) {
+                el.textContent = currentTranslations[key];
+            }
+        });
+
+        // Update placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (currentTranslations[key]) {
+                el.placeholder = currentTranslations[key];
+            }
+        });
+
+        // Update dynamic content
+        updateDynamicContent();
+    }
+
+    // Get translation
+    function getTranslation(key) {
+        return currentTranslations[key] || key;
+    }
+
+    // Update dynamic content
+    function updateDynamicContent() {
+        // Update empty order message
+        const emptyOrderDiv = document.querySelector('.empty-order');
+        if (emptyOrderDiv) {
+            emptyOrderDiv.innerHTML = `
+                <div>${getTranslation('no_items_in_order')}</div>
+                <small>${getTranslation('click_menu_items')}</small>
+            `;
+        }
+
+        // Update order items if any
+        updateOrderDisplay();
+    }
+</script>
+{% endblock %}

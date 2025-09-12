@@ -1,0 +1,1388 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* Prevent transitions during theme loading to avoid flicker */
+        html.loading-theme * {
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -ms-transition: none !important;
+            -o-transition: none !important;
+        }
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .settings-header {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .settings-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color, white);
+        }
+
+        .settings-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+            color: var(--text-color, white);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .settings-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .settings-card-header {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .settings-card-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color, white);
+        }
+
+        .settings-card-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+            color: var(--text-color, white);
+        }
+
+        .settings-card-content {
+            padding: 25px;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .setting-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .setting-group h4 {
+            margin: 0 0 15px 0;
+            color: #374151;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .setting-item input,
+        .setting-item select,
+        .setting-item textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .setting-item input:focus,
+        .setting-item select:focus,
+        .setting-item textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .setting-item textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .settings-actions {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f3f4f6;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-upload-label i {
+            margin-right: 10px;
+            font-size: 18px;
+            color: #6b7280;
+        }
+
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .notification-settings {
+            display: grid;
+            gap: 10px;
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .notification-item label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .notification-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .settings-header h1 {
+                font-size: 2rem;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .color-picker {
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1 data-i18n="settings">Settings</h1>
+        <p data-i18n="settings_description">Customize your Restaurant Management System</p>
+    </div>
+
+    <form id="settingsForm">
+        <div class="settings-grid">
+            <!-- Business Model Settings -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h3 data-i18n="business_model_settings">Business Model Settings</h3>
+                    <p data-i18n="business_model_settings_desc">Configure your restaurant's service model</p>
+                </div>
+                <div class="settings-card-content">
+                    <div class="setting-group">
+                        <h4 data-i18n="service_type">Service Type</h4>
+                        <p data-i18n="service_type_desc">Select how your restaurant operates</p>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="serviceTables" name="serviceType" value="tables" checked>
+                                <label for="serviceTables" data-i18n="service_tables_only">Tables Only (Dine-in)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="serviceDelivery" name="serviceType" value="delivery">
+                                <label for="serviceDelivery" data-i18n="service_delivery_only">Delivery Only</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="serviceBoth" name="serviceType" value="both">
+                                <label for="serviceBoth" data-i18n="service_both">Both Tables & Delivery</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h4 data-i18n="table_settings">Table Settings</h4>
+                        <div class="setting-item">
+                            <label for="enableTableManagement" data-i18n="enable_table_management">Enable Table Management</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enableTableManagement" name="enableTableManagement" checked>
+                                <label for="enableTableManagement" data-i18n="enable_table_management_desc">Allow table reservations and management</label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label for="maxTables" data-i18n="max_tables">Maximum Tables</label>
+                            <input type="number" id="maxTables" name="maxTables" min="1" max="100">
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h4 data-i18n="delivery_settings">Delivery Settings</h4>
+                        <div class="setting-item">
+                            <label for="enableDelivery" data-i18n="enable_delivery">Enable Delivery Orders</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enableDelivery" name="enableDelivery">
+                                <label for="enableDelivery" data-i18n="enable_delivery_desc">Allow delivery orders and management</label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label for="deliveryRadius" data-i18n="delivery_radius">Delivery Radius (km)</label>
+                            <input type="number" id="deliveryRadius" name="deliveryRadius" min="1" max="50" step="0.5">
+                        </div>
+                        <div class="setting-item">
+                            <label for="deliveryFee" data-i18n="delivery_fee">Delivery Fee (₺)</label>
+                            <input type="number" id="deliveryFee" name="deliveryFee" min="0" step="0.50">
+                        </div>
+                        <div class="setting-item">
+                            <label for="minOrderAmount" data-i18n="min_order_amount">Minimum Order Amount (₺)</label>
+                            <input type="number" id="minOrderAmount" name="minOrderAmount" min="0" step="1.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- App Title Settings -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h3 data-i18n="app_title_settings">App Title Settings</h3>
+                    <p data-i18n="app_title_settings_desc">Customize the application title and branding</p>
+                </div>
+                <div class="settings-card-content">
+                    <div class="setting-group">
+                        <h4 data-i18n="app_title">Application Title</h4>
+                        <div class="setting-item">
+                            <label for="appTitle" data-i18n="app_title_label">App Title (shown in sidebar)</label>
+                            <input type="text" id="appTitle" name="appTitle" placeholder="Enter app title...">
+                        </div>
+                        <div class="setting-item">
+                            <label for="appSubtitle" data-i18n="app_subtitle_label">App Subtitle (optional)</label>
+                            <input type="text" id="appSubtitle" name="appSubtitle" placeholder="Enter app subtitle...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Color Settings -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h3 data-i18n="theme_settings">Theme Settings</h3>
+                    <p data-i18n="theme_settings_desc">Customize the appearance and colors of your system</p>
+                </div>
+                <div class="settings-card-content">
+                    <div class="setting-group">
+                        <h4 data-i18n="primary_color">Primary Color</h4>
+                        <p data-i18n="primary_color_desc">Choose the main color theme for your application</p>
+                        <div class="color-picker">
+                            <div class="color-option primary-color-option" data-color="#667eea" style="background-color: #667eea;" title="Blue"></div>
+                            <div class="color-option primary-color-option" data-color="#764ba2" style="background-color: #764ba2;" title="Purple"></div>
+                            <div class="color-option primary-color-option" data-color="#f093fb" style="background-color: #f093fb;" title="Pink"></div>
+                            <div class="color-option primary-color-option" data-color="#f5576c" style="background-color: #f5576c;" title="Red"></div>
+                            <div class="color-option primary-color-option" data-color="#4facfe" style="background-color: #4facfe;" title="Light Blue"></div>
+                            <div class="color-option primary-color-option" data-color="#00f2fe" style="background-color: #00f2fe;" title="Cyan"></div>
+                            <div class="color-option primary-color-option" data-color="#43e97b" style="background-color: #43e97b;" title="Green"></div>
+                            <div class="color-option primary-color-option" data-color="#38f9d7" style="background-color: #38f9d7;" title="Mint"></div>
+                            <div class="color-option primary-color-option" data-color="#fa709a" style="background-color: #fa709a;" title="Rose"></div>
+                            <div class="color-option primary-color-option" data-color="#a8edea" style="background-color: #a8edea;" title="Light Green"></div>
+                            <div class="color-option primary-color-option" data-color="#fed6e3" style="background-color: #fed6e3;" title="Light Pink"></div>
+                            <div class="color-option primary-color-option" data-color="#d299c2" style="background-color: #d299c2;" title="Lavender"></div>
+                        </div>
+                        <div class="setting-item" style="margin-top: 15px;">
+                            <label for="customPrimaryColor" data-i18n="custom_primary_color">Custom Primary Color</label>
+                            <input type="color" id="customPrimaryColor" name="customPrimaryColor">
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h4 data-i18n="secondary_color">Secondary Color</h4>
+                        <p data-i18n="secondary_color_desc">Choose the secondary color for gradient effects</p>
+                        <div class="color-picker">
+                            <div class="color-option secondary-color-option" data-color="#764ba2" style="background-color: #764ba2;" title="Purple"></div>
+                            <div class="color-option secondary-color-option" data-color="#667eea" style="background-color: #667eea;" title="Blue"></div>
+                            <div class="color-option secondary-color-option" data-color="#f5576c" style="background-color: #f5576c;" title="Red"></div>
+                            <div class="color-option secondary-color-option" data-color="#f093fb" style="background-color: #f093fb;" title="Pink"></div>
+                            <div class="color-option secondary-color-option" data-color="#00f2fe" style="background-color: #00f2fe;" title="Cyan"></div>
+                            <div class="color-option secondary-color-option" data-color="#4facfe" style="background-color: #4facfe;" title="Light Blue"></div>
+                            <div class="color-option secondary-color-option" data-color="#38f9d7" style="background-color: #38f9d7;" title="Mint"></div>
+                            <div class="color-option secondary-color-option" data-color="#43e97b" style="background-color: #43e97b;" title="Green"></div>
+                            <div class="color-option secondary-color-option" data-color="#a8edea" style="background-color: #a8edea;" title="Light Green"></div>
+                            <div class="color-option secondary-color-option" data-color="#fed6e3" style="background-color: #fed6e3;" title="Light Pink"></div>
+                            <div class="color-option secondary-color-option" data-color="#d299c2" style="background-color: #d299c2;" title="Lavender"></div>
+                            <div class="color-option secondary-color-option" data-color="#fa709a" style="background-color: #fa709a;" title="Rose"></div>
+                        </div>
+                        <div class="setting-item" style="margin-top: 15px;">
+                            <label for="customSecondaryColor" data-i18n="custom_secondary_color">Custom Secondary Color</label>
+                            <input type="color" id="customSecondaryColor" name="customSecondaryColor">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button type="submit" class="btn-save" data-i18n="save_settings">Save Settings</button>
+            <button type="button" class="btn-reset" onclick="resetSettings()" data-i18n="reset_to_defaults">Reset to Defaults</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Theme Manager - Single Source of Truth Pattern with Anti-Flicker
+    class ThemeManager {
+        constructor() {
+            // Add loading class to disable transitions during initialization
+            document.documentElement.classList.add('loading-theme');
+            
+            // Try to load from localStorage first (instant, no flicker)
+            const cachedColors = this.loadFromCache();
+            this.colors = cachedColors || { primary: '#667eea', secondary: '#764ba2' };
+            this.isLoaded = false;
+            this.isApplying = false;
+            
+            // Apply cached colors immediately to prevent flicker
+            if (cachedColors) {
+                this.applyImmediate();
+                console.log('Applied cached theme colors to prevent flicker:', this.colors);
+            }
+            
+            // Remove loading class after a short delay to re-enable transitions
+            setTimeout(() => {
+                document.documentElement.classList.remove('loading-theme');
+            }, 100);
+        }
+        
+        loadFromCache() {
+            try {
+                const cached = localStorage.getItem('rms_theme_colors');
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (error) {
+                console.warn('Failed to load cached theme colors:', error);
+            }
+            return null;
+        }
+        
+        saveToCache() {
+            try {
+                localStorage.setItem('rms_theme_colors', JSON.stringify(this.colors));
+            } catch (error) {
+                console.warn('Failed to cache theme colors:', error);
+            }
+        }
+        
+        applyImmediate() {
+            // Immediate application without checks or animations
+            document.documentElement.style.setProperty('--primary-color', this.colors.primary);
+            document.documentElement.style.setProperty('--secondary-color', this.colors.secondary);
+        }
+
+        async load() {
+            if (this.isLoaded) {
+                console.log('Theme already loaded, skipping');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/settings');
+                const settings = await response.json();
+
+                const newColors = {
+                    primary: settings.primaryColor || '#667eea',
+                    secondary: settings.secondaryColor || '#764ba2'
+                };
+                
+                // Only update if colors actually changed
+                if (newColors.primary !== this.colors.primary || newColors.secondary !== this.colors.secondary) {
+                    this.colors = newColors;
+                    this.apply();
+                    this.saveToCache(); // Cache the new colors
+                    console.log('Theme updated from API:', this.colors);
+                } else {
+                    console.log('Theme colors unchanged, no update needed');
+                }
+                
+                this.isLoaded = true;
+                window.themeColorsLoaded = true;
+
+            } catch (error) {
+                console.error('Error loading theme from API:', error);
+                // Apply current colors (could be from cache or defaults)
+                this.apply();
+                this.isLoaded = true;
+                window.themeColorsLoaded = true;
+            }
+        }
+
+        apply() {
+            if (this.isApplying) return;
+
+            this.isApplying = true;
+
+            // Use requestAnimationFrame for smoother updates
+            requestAnimationFrame(() => {
+                // Check if colors actually changed
+                const currentPrimary = document.documentElement.style.getPropertyValue('--primary-color').trim();
+                const currentSecondary = document.documentElement.style.getPropertyValue('--secondary-color').trim();
+
+                if (currentPrimary !== this.colors.primary || currentSecondary !== this.colors.secondary) {
+                    // Apply colors without transitions to prevent flicker
+                    document.documentElement.style.setProperty('--primary-color', this.colors.primary);
+                    document.documentElement.style.setProperty('--secondary-color', this.colors.secondary);
+
+                    // Update selected color options
+                    this.updateColorSelections();
+                    
+                    // Save to cache whenever colors are applied
+                    this.saveToCache();
+
+                    console.log('Theme applied:', this.colors);
+                } else {
+                    console.log('Colors unchanged, skipping theme application');
+                }
+
+                this.isApplying = false;
+            });
+        }
+
+        updateColor(primary, secondary) {
+            this.colors.primary = primary;
+            this.colors.secondary = secondary;
+            this.apply();
+            // Immediately save to cache for instant loading next time
+            this.saveToCache();
+        }
+
+        updateColorSelections() {
+            // Clear all selections
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Update primary color selection
+            document.querySelectorAll('.primary-color-option').forEach(option => {
+                if (option.dataset.color === this.colors.primary) {
+                    option.classList.add('selected');
+                }
+            });
+
+            // Update secondary color selection
+            document.querySelectorAll('.secondary-color-option').forEach(option => {
+                if (option.dataset.color === this.colors.secondary) {
+                    option.classList.add('selected');
+                }
+            });
+        }
+
+        getCurrentColors() {
+            return { ...this.colors };
+        }
+    }
+
+    // Create global theme manager instance
+    const themeManager = new ThemeManager();
+
+    // Settings translations
+    const settingsTranslations = {
+        en: {
+            settings: 'Settings',
+            settings_description: 'Customize your Restaurant Management System',
+            business_model_settings: 'Business Model Settings',
+            business_model_settings_desc: 'Configure your restaurant\'s service model',
+            service_type: 'Service Type',
+            service_type_desc: 'Select how your restaurant operates',
+            service_tables_only: 'Tables Only (Dine-in)',
+            service_delivery_only: 'Delivery Only',
+            service_both: 'Both Tables & Delivery',
+            table_settings: 'Table Settings',
+            enable_table_management: 'Enable Table Management',
+            enable_table_management_desc: 'Allow table reservations and management',
+            max_tables: 'Maximum Tables',
+            delivery_settings: 'Delivery Settings',
+            enable_delivery: 'Enable Delivery Orders',
+            enable_delivery_desc: 'Allow delivery orders and management',
+            delivery_radius: 'Delivery Radius (km)',
+            delivery_fee: 'Delivery Fee (₺)',
+            min_order_amount: 'Minimum Order Amount (₺)',
+            app_title_settings: 'App Title Settings',
+            app_title_settings_desc: 'Customize the application title and branding',
+            app_title: 'Application Title',
+            app_title_label: 'App Title (shown in sidebar)',
+            app_subtitle_label: 'App Subtitle (optional)',
+            theme_settings: 'Theme Settings',
+            theme_settings_desc: 'Customize the appearance and colors of your system',
+            primary_color: 'Primary Color',
+            primary_color_desc: 'Choose the main color theme for your application',
+            custom_color: 'Custom Color (hex code)',
+            general_settings: 'General Settings',
+            general_settings_desc: 'Basic restaurant information and preferences',
+            restaurant_info: 'Restaurant Information',
+            restaurant_name: 'Restaurant Name',
+            restaurant_address: 'Address',
+            restaurant_phone: 'Phone Number',
+            restaurant_email: 'Email',
+            operating_hours: 'Operating Hours',
+            opening_time: 'Opening Time',
+            closing_time: 'Closing Time',
+            timezone: 'Timezone',
+            menu_settings: 'Menu Settings',
+            menu_settings_desc: 'Configure menu display and ordering options',
+            display_options: 'Display Options',
+            show_prices: 'Show prices on menu',
+            show_prep_time: 'Show preparation time',
+            show_images: 'Show dish images',
+            enable_online_ordering: 'Enable online ordering',
+            menu_categories: 'Menu Categories',
+            default_category: 'Default category for new items',
+            appetizer: 'Appetizer',
+            main_course: 'Main Course',
+            dessert: 'Dessert',
+            beverage: 'Beverage',
+            auto_categorize: 'Auto-categorize menu items',
+            inventory_settings: 'Inventory Settings',
+            inventory_settings_desc: 'Manage stock levels and alerts',
+            stock_alerts: 'Stock Alerts',
+            low_stock_threshold: 'Low stock threshold (%)',
+            critical_stock_threshold: 'Critical stock threshold (%)',
+            expiring_alert_days: 'Days before expiration alert',
+            auto_deduction: 'Auto Deduction',
+            auto_deduct_on_order: 'Auto-deduct inventory on order placement',
+            track_wastage: 'Track inventory wastage',
+            staff_settings: 'Staff Settings',
+            staff_settings_desc: 'Configure staff management and scheduling',
+            time_tracking: 'Time Tracking',
+            enable_time_tracking: 'Enable staff time tracking',
+            require_clock_in_out: 'Require clock in/out for shifts',
+            scheduling: 'Scheduling',
+            max_hours_week: 'Maximum hours per week',
+            min_break_time: 'Minimum break time (minutes)',
+            appearance_settings: 'Appearance Settings',
+            appearance_settings_desc: 'Customize the look and feel of your system',
+            theme_colors: 'Theme Colors',
+            primary_color: 'Primary Color',
+            branding: 'Branding',
+            restaurant_logo: 'Restaurant Logo',
+            choose_file: 'Choose file or drag here',
+            notification_settings: 'Notification Settings',
+            notification_settings_desc: 'Configure alerts and notifications',
+            email_notifications: 'Email Notifications',
+            notify_low_stock: 'Low stock alerts',
+            notify_new_orders: 'New order notifications',
+            notify_reservations: 'Reservation confirmations',
+            notify_staff_changes: 'Staff schedule changes',
+            system_alerts: 'System Alerts',
+            alert_system_errors: 'System error alerts',
+            alert_security: 'Security alerts',
+            system_settings: 'System Settings',
+            system_settings_desc: 'Advanced system configuration',
+            data_management: 'Data Management',
+            backup_frequency: 'Automatic backup frequency',
+            daily: 'Daily',
+            weekly: 'Weekly',
+            monthly: 'Monthly',
+            manual: 'Manual only',
+            data_retention: 'Data retention period (months)',
+            performance: 'Performance',
+            enable_caching: 'Enable caching for better performance',
+            compress_images: 'Auto-compress uploaded images',
+            save_settings: 'Save Settings',
+            reset_to_defaults: 'Reset to Defaults',
+            settings_saved: 'Settings saved successfully!',
+            settings_reset: 'Settings reset to defaults.',
+            confirm_reset: 'Are you sure you want to reset all settings to defaults?'
+        },
+        ar: {
+            settings: 'الإعدادات',
+            settings_description: 'تخصيص نظام إدارة المطاعم الخاص بك',
+            business_model_settings: 'إعدادات نموذج العمل',
+            business_model_settings_desc: 'تكوين نموذج خدمة المطعم',
+            service_type: 'نوع الخدمة',
+            service_type_desc: 'اختر كيفية عمل المطعم',
+            service_tables_only: 'الطاولات فقط (تناول في المكان)',
+            service_delivery_only: 'التوصيل فقط',
+            service_both: 'كلاهما (الطاولات والتوصيل)',
+            table_settings: 'إعدادات الطاولات',
+            enable_table_management: 'تمكين إدارة الطاولات',
+            enable_table_management_desc: 'السماح بحجز الطاولات وإدارتها',
+            max_tables: 'الحد الأقصى للطاولات',
+            delivery_settings: 'إعدادات التوصيل',
+            enable_delivery: 'تمكين طلبات التوصيل',
+            enable_delivery_desc: 'السماح بطلبات التوصيل وإدارتها',
+            delivery_radius: 'نطاق التوصيل (كم)',
+            delivery_fee: 'رسوم التوصيل (₺)',
+            min_order_amount: 'الحد الأدنى لمبلغ الطلب (₺)',
+            app_title_settings: 'إعدادات عنوان التطبيق',
+            app_title_settings_desc: 'تخصيص عنوان التطبيق والعلامة التجارية',
+            app_title: 'عنوان التطبيق',
+            app_title_label: 'عنوان التطبيق (يظهر في الشريط الجانبي)',
+            app_subtitle_label: 'عنوان فرعي للتطبيق (اختياري)',
+            theme_settings: 'إعدادات المظهر',
+            theme_settings_desc: 'تخصيص مظهر وألوان النظام',
+            primary_color: 'اللون الأساسي',
+            primary_color_desc: 'اختر المظهر اللوني الرئيسي للتطبيق',
+            custom_color: 'لون مخصص (رمز لوني)',
+            general_settings: 'الإعدادات العامة',
+            general_settings_desc: 'معلومات المطعم الأساسية والتفضيلات',
+            restaurant_info: 'معلومات المطعم',
+            restaurant_name: 'اسم المطعم',
+            restaurant_address: 'العنوان',
+            restaurant_phone: 'رقم الهاتف',
+            restaurant_email: 'البريد الإلكتروني',
+            operating_hours: 'ساعات العمل',
+            opening_time: 'وقت الافتتاح',
+            closing_time: 'وقت الإغلاق',
+            timezone: 'المنطقة الزمنية',
+            menu_settings: 'إعدادات القائمة',
+            menu_settings_desc: 'تكوين عرض القائمة وخيارات الطلب',
+            display_options: 'خيارات العرض',
+            show_prices: 'عرض الأسعار في القائمة',
+            show_prep_time: 'عرض وقت التحضير',
+            show_images: 'عرض صور الأطباق',
+            enable_online_ordering: 'تمكين الطلب عبر الإنترنت',
+            menu_categories: 'فئات القائمة',
+            default_category: 'الفئة الافتراضية للعناصر الجديدة',
+            appetizer: 'مقبلات',
+            main_course: 'طبق رئيسي',
+            dessert: 'حلوى',
+            beverage: 'مشروب',
+            auto_categorize: 'تصنيف تلقائي لعناصر القائمة',
+            inventory_settings: 'إعدادات المخزون',
+            inventory_settings_desc: 'إدارة مستويات المخزون والتنبيهات',
+            stock_alerts: 'تنبيهات المخزون',
+            low_stock_threshold: 'حد المخزون المنخفض (%)',
+            critical_stock_threshold: 'حد المخزون الحرج (%)',
+            expiring_alert_days: 'أيام قبل تنبيه انتهاء الصلاحية',
+            auto_deduction: 'الخصم التلقائي',
+            auto_deduct_on_order: 'خصم تلقائي للمخزون عند وضع الطلب',
+            track_wastage: 'تتبع نفايات المخزون',
+            staff_settings: 'إعدادات الموظفين',
+            staff_settings_desc: 'تكوين إدارة الموظفين والجدولة',
+            time_tracking: 'تتبع الوقت',
+            enable_time_tracking: 'تمكين تتبع وقت الموظفين',
+            require_clock_in_out: 'يتطلب تسجيل الدخول/الخروج للمناوبات',
+            scheduling: 'الجدولة',
+            max_hours_week: 'الحد الأقصى للساعات أسبوعياً',
+            min_break_time: 'الحد الأدنى لوقت الاستراحة (دقائق)',
+            appearance_settings: 'إعدادات المظهر',
+            appearance_settings_desc: 'تخصيص مظهر النظام',
+            theme_colors: 'ألوان المظهر',
+            primary_color: 'اللون الأساسي',
+            branding: 'العلامة التجارية',
+            restaurant_logo: 'شعار المطعم',
+            choose_file: 'اختر ملف أو اسحب هنا',
+            notification_settings: 'إعدادات الإشعارات',
+            notification_settings_desc: 'تكوين التنبيهات والإشعارات',
+            email_notifications: 'إشعارات البريد الإلكتروني',
+            notify_low_stock: 'تنبيهات المخزون المنخفض',
+            notify_new_orders: 'إشعارات الطلبات الجديدة',
+            notify_reservations: 'تأكيدات الحجوزات',
+            notify_staff_changes: 'تغييرات جدول الموظفين',
+            system_alerts: 'تنبيهات النظام',
+            alert_system_errors: 'تنبيهات أخطاء النظام',
+            alert_security: 'تنبيهات الأمان',
+            system_settings: 'إعدادات النظام',
+            system_settings_desc: 'التكوين المتقدم للنظام',
+            data_management: 'إدارة البيانات',
+            backup_frequency: 'تكرار النسخ الاحتياطي التلقائي',
+            daily: 'يومي',
+            weekly: 'أسبوعي',
+            monthly: 'شهري',
+            manual: 'يدوي فقط',
+            data_retention: 'فترة الاحتفاظ بالبيانات (أشهر)',
+            performance: 'الأداء',
+            enable_caching: 'تمكين التخزين المؤقت لتحسين الأداء',
+            compress_images: 'ضغط تلقائي للصور المرفوعة',
+            save_settings: 'حفظ الإعدادات',
+            reset_to_defaults: 'إعادة تعيين إلى الافتراضي',
+            settings_saved: 'تم حفظ الإعدادات بنجاح!',
+            settings_reset: 'تم إعادة تعيين الإعدادات إلى الافتراضي.',
+            confirm_reset: 'هل أنت متأكد من أنك تريد إعادة تعيين جميع الإعدادات إلى الافتراضي؟'
+        },
+        tr: {
+            settings: 'Ayarlar',
+            settings_description: 'Restoran Yönetim Sisteminizi Özelleştirin',
+            business_model_settings: 'İş Modeli Ayarları',
+            business_model_settings_desc: 'Restoranınızın hizmet modelini yapılandırın',
+            service_type: 'Hizmet Türü',
+            service_type_desc: 'Restoranınızın nasıl çalıştığını seçin',
+            service_tables_only: 'Sadece Masalar (Yemek Salonu)',
+            service_delivery_only: 'Sadece Teslimat',
+            service_both: 'Her İkisi (Masalar ve Teslimat)',
+            table_settings: 'Masa Ayarları',
+            enable_table_management: 'Masa Yönetimini Etkinleştir',
+            enable_table_management_desc: 'Masa rezervasyonlarına ve yönetimine izin ver',
+            max_tables: 'Maksimum Masa Sayısı',
+            delivery_settings: 'Teslimat Ayarları',
+            enable_delivery: 'Teslimat Siparişlerini Etkinleştir',
+            enable_delivery_desc: 'Teslimat siparişlerine ve yönetimine izin ver',
+            delivery_radius: 'Teslimat Yarıçapı (km)',
+            delivery_fee: 'Teslimat Ücreti (₺)',
+            min_order_amount: 'Minimum Sipariş Tutarı (₺)',
+            app_title_settings: 'Uygulama Başlığı Ayarları',
+            app_title_settings_desc: 'Uygulama başlığını ve markalaşmayı özelleştirin',
+            app_title: 'Uygulama Başlığı',
+            app_title_label: 'Uygulama Başlığı (kenar çubuğunda gösterilir)',
+            app_subtitle_label: 'Uygulama Alt Başlığı (isteğe bağlı)',
+            theme_settings: 'Tema Ayarları',
+            theme_settings_desc: 'Sistemin görünümünü ve renklerini özelleştirin',
+            primary_color: 'Ana Renk',
+            primary_color_desc: 'Uygulamanız için ana renk temasını seçin',
+            custom_color: 'Özel Renk (hex kodu)',
+            general_settings: 'Genel Ayarlar',
+            general_settings_desc: 'Temel restoran bilgileri ve tercihleri',
+            restaurant_info: 'Restoran Bilgileri',
+            restaurant_name: 'Restoran Adı',
+            restaurant_address: 'Adres',
+            restaurant_phone: 'Telefon Numarası',
+            restaurant_email: 'E-posta',
+            operating_hours: 'Çalışma Saatleri',
+            opening_time: 'Açılış Saati',
+            closing_time: 'Kapanış Saati',
+            timezone: 'Saat Dilimi',
+            menu_settings: 'Menü Ayarları',
+            menu_settings_desc: 'Menü görüntüleme ve sipariş seçeneklerini yapılandırın',
+            display_options: 'Görüntüleme Seçenekleri',
+            show_prices: 'Menüde fiyatları göster',
+            show_prep_time: 'Hazırlama süresini göster',
+            show_images: 'Yemek resimlerini göster',
+            enable_online_ordering: 'Çevrimiçi siparişi etkinleştir',
+            menu_categories: 'Menü Kategorileri',
+            default_category: 'Yeni öğeler için varsayılan kategori',
+            appetizer: 'Meze',
+            main_course: 'Ana Yemek',
+            dessert: 'Tatlı',
+            beverage: 'İçecek',
+            auto_categorize: 'Menü öğelerini otomatik kategorize et',
+            inventory_settings: 'Stok Ayarları',
+            inventory_settings_desc: 'Stok seviyelerini ve uyarıları yönetin',
+            stock_alerts: 'Stok Uyarıları',
+            low_stock_threshold: 'Düşük stok eşiği (%)',
+            critical_stock_threshold: 'Kritik stok eşiği (%)',
+            expiring_alert_days: 'Son kullanma tarihi uyarısından önceki gün sayısı',
+            auto_deduction: 'Otomatik Kesinti',
+            auto_deduct_on_order: 'Sipariş yerleştirildiğinde stoktan otomatik kes',
+            track_wastage: 'Stok israfını takip et',
+            staff_settings: 'Personel Ayarları',
+            staff_settings_desc: 'Personel yönetimi ve planlamayı yapılandırın',
+            time_tracking: 'Zaman Takibi',
+            enable_time_tracking: 'Personel zaman takibini etkinleştir',
+            require_clock_in_out: 'Vardiyalar için giriş/çıkış gerektir',
+            scheduling: 'Planlama',
+            max_hours_week: 'Haftalık maksimum saat',
+            min_break_time: 'Minimum mola süresi (dakika)',
+            appearance_settings: 'Görünüm Ayarları',
+            appearance_settings_desc: 'Sistemin görünümünü ve hissini özelleştirin',
+            theme_colors: 'Tema Renkleri',
+            primary_color: 'Ana Renk',
+            branding: 'Markalaşma',
+            restaurant_logo: 'Restoran Logosu',
+            choose_file: 'Dosya seçin veya buraya sürükleyin',
+            notification_settings: 'Bildirim Ayarları',
+            notification_settings_desc: 'Uyarıları ve bildirimleri yapılandırın',
+            email_notifications: 'E-posta Bildirimleri',
+            notify_low_stock: 'Düşük stok uyarıları',
+            notify_new_orders: 'Yeni sipariş bildirimleri',
+            notify_reservations: 'Rezervasyon onayları',
+            notify_staff_changes: 'Personel çizelgesi değişiklikleri',
+            system_alerts: 'Sistem Uyarıları',
+            alert_system_errors: 'Sistem hatası uyarıları',
+            alert_security: 'Güvenlik uyarıları',
+            system_settings: 'Sistem Ayarları',
+            system_settings_desc: 'Gelişmiş sistem yapılandırması',
+            data_management: 'Veri Yönetimi',
+            backup_frequency: 'Otomatik yedekleme sıklığı',
+            daily: 'Günlük',
+            weekly: 'Haftalık',
+            monthly: 'Aylık',
+            manual: 'Sadece manuel',
+            data_retention: 'Veri saklama süresi (ay)',
+            performance: 'Performans',
+            enable_caching: 'Daha iyi performans için önbelleği etkinleştir',
+            compress_images: 'Yüklenen resimleri otomatik sıkıştır',
+            save_settings: 'Ayarları Kaydet',
+            reset_to_defaults: 'Varsayılanlara Sıfırla',
+            settings_saved: 'Ayarlar başarıyla kaydedildi!',
+            settings_reset: 'Ayarlar varsayılanlara sıfırlandı.',
+            confirm_reset: 'Tüm ayarları varsayılanlara sıfırlamak istediğinizden emin misiniz?'
+        }
+    };
+
+    function t(key) {
+        const lang = localStorage.getItem('lang') || 'en';
+        return (settingsTranslations[lang] || settingsTranslations.en)[key] || key;
+    }
+
+        // Load settings from API
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/settings');
+            const settings = await response.json();
+
+            // Business model settings
+            const serviceType = settings.serviceType || 'tables';
+            const serviceTypeInputs = document.querySelectorAll('input[name="serviceType"]');
+            serviceTypeInputs.forEach(input => {
+                if (input.value === serviceType) {
+                    input.checked = true;
+                }
+            });
+
+            // Table settings
+            const enableTableManagement = document.getElementById('enableTableManagement');
+            const maxTables = document.getElementById('maxTables');
+            if (enableTableManagement) {
+                enableTableManagement.checked = settings.enableTableManagement !== false;
+            }
+            if (maxTables) {
+                maxTables.value = settings.maxTables || 20;
+            }
+
+            // Delivery settings
+            const enableDelivery = document.getElementById('enableDelivery');
+            const deliveryRadius = document.getElementById('deliveryRadius');
+            const deliveryFee = document.getElementById('deliveryFee');
+            const minOrderAmount = document.getElementById('minOrderAmount');
+
+            if (enableDelivery) {
+                enableDelivery.checked = settings.enableDelivery || false;
+            }
+            if (deliveryRadius) {
+                deliveryRadius.value = settings.deliveryRadius || 10;
+            }
+            if (deliveryFee) {
+                deliveryFee.value = settings.deliveryFee || 5.00;
+            }
+            if (minOrderAmount) {
+                minOrderAmount.value = settings.minOrderAmount || 25.00;
+            }
+
+            // Update delivery settings visibility based on service type
+            updateDeliverySettingsVisibility(serviceType);
+
+            // App title settings - only load elements that exist on this page
+            const appTitleElement = document.getElementById('appTitle');
+            const appSubtitleElement = document.getElementById('appSubtitle');
+
+            if (appTitleElement) {
+                appTitleElement.value = settings.appTitle || '';
+            }
+            if (appSubtitleElement) {
+                appSubtitleElement.value = settings.appSubtitle || '';
+            }
+
+            // Custom color inputs
+            const customPrimaryColorElement = document.getElementById('customPrimaryColor');
+            const customSecondaryColorElement = document.getElementById('customSecondaryColor');
+
+            if (customPrimaryColorElement) {
+                customPrimaryColorElement.value = settings.primaryColor || '#667eea';
+            }
+            if (customSecondaryColorElement) {
+                customSecondaryColorElement.value = settings.secondaryColor || '#764ba2';
+            }
+
+            // Load theme colors using ThemeManager
+            await themeManager.load();
+
+            // Update app title in sidebar if the function exists
+            if (typeof updateAppTitle === 'function') {
+                updateAppTitle(settings.appTitle || '', settings.appSubtitle || '');
+            }
+
+            console.log('Settings loaded:', settings);
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            // Fallback to defaults if API fails
+            applyDefaultSettings();
+        }
+    }
+
+    // Apply default settings if API fails
+    function applyDefaultSettings() {
+        // Business model settings
+        const serviceType = 'tables';
+        const serviceTypeInputs = document.querySelectorAll('input[name="serviceType"]');
+        serviceTypeInputs.forEach(input => {
+            if (input.value === serviceType) {
+                input.checked = true;
+            }
+        });
+
+        // Table settings
+        const enableTableManagement = document.getElementById('enableTableManagement');
+        const maxTables = document.getElementById('maxTables');
+        if (enableTableManagement) {
+            enableTableManagement.checked = true;
+        }
+        if (maxTables) {
+            maxTables.value = 20;
+        }
+
+        // Delivery settings
+        const enableDelivery = document.getElementById('enableDelivery');
+        const deliveryRadius = document.getElementById('deliveryRadius');
+        const deliveryFee = document.getElementById('deliveryFee');
+        const minOrderAmount = document.getElementById('minOrderAmount');
+
+        if (enableDelivery) {
+            enableDelivery.checked = false;
+        }
+        if (deliveryRadius) {
+            deliveryRadius.value = 10;
+        }
+        if (deliveryFee) {
+            deliveryFee.value = 5.00;
+        }
+        if (minOrderAmount) {
+            minOrderAmount.value = 25.00;
+        }
+
+        // Update delivery settings visibility based on service type
+        updateDeliverySettingsVisibility(serviceType);
+
+        // App title settings
+        const appTitleElement = document.getElementById('appTitle');
+        const appSubtitleElement = document.getElementById('appSubtitle');
+
+        if (appTitleElement) {
+            appTitleElement.value = '';
+        }
+        if (appSubtitleElement) {
+            appSubtitleElement.value = '';
+        }
+
+        // Custom color inputs
+        const customPrimaryColorElement = document.getElementById('customPrimaryColor');
+        const customSecondaryColorElement = document.getElementById('customSecondaryColor');
+
+        if (customPrimaryColorElement) {
+            customPrimaryColorElement.value = '#667eea';
+        }
+        if (customSecondaryColorElement) {
+            customSecondaryColorElement.value = '#764ba2';
+        }
+
+        // Apply default theme colors using ThemeManager
+        themeManager.colors = { primary: '#667eea', secondary: '#764ba2' };
+        themeManager.apply();
+
+        // Update app title in sidebar if the function exists
+        if (typeof updateAppTitle === 'function') {
+            updateAppTitle('', '');
+        }
+    }
+
+
+
+    // Handle color picker
+    function initColorPicker() {
+        // Handle primary color options
+        const primaryColorOptions = document.querySelectorAll('.primary-color-option');
+        if (primaryColorOptions.length > 0) {
+        primaryColorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const primaryColor = this.dataset.color;
+                const currentColors = themeManager.getCurrentColors();
+                themeManager.updateColor(primaryColor, currentColors.secondary);
+                // Update custom input to match selected preset
+                document.getElementById('customPrimaryColor').value = primaryColor;
+            });
+        });
+        }
+
+        // Handle secondary color options
+        const secondaryColorOptions = document.querySelectorAll('.secondary-color-option');
+        if (secondaryColorOptions.length > 0) {
+        secondaryColorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const secondaryColor = this.dataset.color;
+                const currentColors = themeManager.getCurrentColors();
+                themeManager.updateColor(currentColors.primary, secondaryColor);
+                // Update custom input to match selected preset
+                document.getElementById('customSecondaryColor').value = secondaryColor;
+            });
+        });
+        }
+    }
+
+    // Handle logo upload
+    function initLogoUpload() {
+        const logoInput = document.getElementById('restaurantLogo');
+        const logoPreview = document.getElementById('logoPreview');
+
+        if (logoInput && logoPreview) {
+            logoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        logoPreview.src = e.target.result;
+                        logoPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    }
+
+    // Update app title in sidebar
+    function updateAppTitle(title, subtitle) {
+        // Try to update the sidebar title if it exists
+        const sidebarTitle = document.querySelector('.sidebar-header h2');
+        if (sidebarTitle) {
+            // Remove the data-i18n attribute to prevent translation override
+            sidebarTitle.removeAttribute('data-i18n');
+            sidebarTitle.textContent = title;
+        }
+
+        // Store in localStorage for other pages
+        localStorage.setItem('custom_app_title', title);
+        localStorage.setItem('custom_app_subtitle', subtitle);
+
+        console.log('App title updated:', title, subtitle);
+    }
+
+    // Save settings to API
+    async function saveSettings() {
+        console.log('saveSettings function called');
+
+    // Get current displayed colors from CSS variables
+    const primaryColor = document.documentElement.style.getPropertyValue('--primary-color') || '#667eea';
+    const secondaryColor = document.documentElement.style.getPropertyValue('--secondary-color') || '#764ba2';
+
+    // Get service type
+    const serviceType = document.querySelector('input[name="serviceType"]:checked')?.value || 'tables';
+
+    const newSettings = {
+        // Business model settings
+        serviceType: serviceType,
+        enableTableManagement: document.getElementById('enableTableManagement')?.checked !== false,
+        maxTables: parseInt(document.getElementById('maxTables')?.value) || 20,
+        enableDelivery: document.getElementById('enableDelivery')?.checked || false,
+        deliveryRadius: parseFloat(document.getElementById('deliveryRadius')?.value) || 10,
+        deliveryFee: parseFloat(document.getElementById('deliveryFee')?.value) || 5.00,
+        minOrderAmount: parseFloat(document.getElementById('minOrderAmount')?.value) || 25.00,
+
+        // App title settings - only save elements that exist on this page
+        appTitle: document.getElementById('appTitle')?.value || '',
+        appSubtitle: document.getElementById('appSubtitle')?.value || '',
+
+        // Theme colors
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor
+    };
+
+        console.log('Settings to save:', newSettings);
+
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newSettings)
+            });
+
+            if (response.ok) {
+                console.log('Settings saved successfully to database');
+
+                // Update app title in sidebar if it changed
+                updateAppTitle(newSettings.appTitle, newSettings.appSubtitle);
+
+                alert(t('settings_saved'));
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save settings');
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            alert('Error saving settings: ' + error.message);
+        }
+    }
+
+    // Update delivery settings visibility based on service type
+    function updateDeliverySettingsVisibility(serviceType) {
+        const deliverySettingsGroup = document.querySelector('.setting-group h4[data-i18n="delivery_settings"]')?.parentElement;
+        const enableDeliveryCheckbox = document.getElementById('enableDelivery');
+
+        if (serviceType === 'delivery') {
+            // Delivery only - force enable delivery and hide the checkbox
+            if (enableDeliveryCheckbox) {
+                enableDeliveryCheckbox.checked = true;
+                enableDeliveryCheckbox.disabled = true;
+                enableDeliveryCheckbox.parentElement.parentElement.style.display = 'none';
+            }
+            if (deliverySettingsGroup) {
+                deliverySettingsGroup.style.display = 'block';
+            }
+        } else if (serviceType === 'both') {
+            // Both - show delivery settings and enable checkbox
+            if (enableDeliveryCheckbox) {
+                enableDeliveryCheckbox.disabled = false;
+                enableDeliveryCheckbox.parentElement.parentElement.style.display = 'block';
+            }
+            if (deliverySettingsGroup) {
+                deliverySettingsGroup.style.display = 'block';
+            }
+        } else {
+            // Tables only - hide delivery settings
+            if (deliverySettingsGroup) {
+                deliverySettingsGroup.style.display = 'none';
+            }
+        }
+    }
+
+    // Handle service type change
+    function handleServiceTypeChange() {
+        const serviceType = document.querySelector('input[name="serviceType"]:checked')?.value || 'tables';
+        updateDeliverySettingsVisibility(serviceType);
+    }
+
+    // Reset settings
+    function resetSettings() {
+        if (confirm(t('confirm_reset'))) {
+            localStorage.removeItem('rms_settings');
+            loadSettings();
+            alert(t('settings_reset'));
+        }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        // Immediately apply cached app title to prevent flicker
+        const cachedTitle = localStorage.getItem('custom_app_title');
+        if (cachedTitle && cachedTitle.trim() !== '') {
+            const sidebarTitle = document.querySelector('.sidebar-header h2');
+            if (sidebarTitle) {
+                sidebarTitle.removeAttribute('data-i18n');
+                sidebarTitle.textContent = cachedTitle;
+            }
+        }
+        
+        loadSettings();
+        initColorPicker();
+        initLogoUpload();
+
+        // Handle custom primary color input
+        const customPrimaryColorInput = document.getElementById('customPrimaryColor');
+        if (customPrimaryColorInput) {
+            customPrimaryColorInput.addEventListener('input', function(e) {
+                const primaryColor = e.target.value;
+                const currentColors = themeManager.getCurrentColors();
+                themeManager.updateColor(primaryColor, currentColors.secondary);
+                // Clear preset selection when using custom color
+                document.querySelectorAll('.primary-color-option').forEach(opt => opt.classList.remove('selected'));
+            });
+        }
+
+        // Handle custom secondary color input
+        const customSecondaryColorInput = document.getElementById('customSecondaryColor');
+        if (customSecondaryColorInput) {
+            customSecondaryColorInput.addEventListener('input', function(e) {
+                const secondaryColor = e.target.value;
+                const currentColors = themeManager.getCurrentColors();
+                themeManager.updateColor(currentColors.primary, secondaryColor);
+                // Clear preset selection when using custom color
+                document.querySelectorAll('.secondary-color-option').forEach(opt => opt.classList.remove('selected'));
+            });
+        }
+
+        // Handle service type change
+        const serviceTypeInputs = document.querySelectorAll('input[name="serviceType"]');
+        serviceTypeInputs.forEach(input => {
+            input.addEventListener('change', handleServiceTypeChange);
+        });
+
+        // Handle form submission
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveSettings();
+        });
+
+        // Apply translations
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (settingsTranslations.en[key]) {
+                el.textContent = t(key);
+            }
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (settingsTranslations.en[key]) {
+                el.placeholder = t(key);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

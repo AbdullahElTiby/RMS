@@ -1,0 +1,893 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Management - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .language-selector label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .language-selector select {
+            padding: 10px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            min-width: 120px;
+            appearance: none;
+            padding-right: 40px;
+        }
+        .language-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .language-selector {
+            position: relative;
+        }
+        .language-indicator {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .menu-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .menu-card .image-container {
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .menu-card .item-image {
+            max-width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .menu-card h3 {
+            margin: 0 0 12px 0;
+            color: #2d3748;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .menu-card .price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .menu-card .category {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #3730a3;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .menu-card .description {
+            color: #64748b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .menu-card .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-available {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+        }
+        .status-unavailable {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .form-group select {
+            cursor: pointer;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+
+
+    <div class="header">
+        <h1 data-i18n="menu_management_title">Menu Management</h1>
+        <div class="header-actions">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="openAddModal()" data-i18n="add_new_item">Add New Item</button>
+        </div>
+    </div>
+
+    <div class="menu-grid" id="menuGrid">
+        <!-- Menu items will be loaded here -->
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 40px;" data-i18n="loading_menu_items">
+        Loading menu items...
+    </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-i18n="add_menu_item">Add Menu Item</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form id="itemForm">
+                <input type="hidden" id="itemId">
+
+                <div class="form-group">
+                    <label for="name" data-i18n="item_name">Item Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" data-i18n="description">Description</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price" data-i18n="price">Price (₺)</label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="category" data-i18n="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="" data-i18n="select_category">Select Category</option>
+                        <option value="appetizer" data-i18n="appetizer">Appetizer</option>
+                        <option value="main" data-i18n="main_course">Main Course</option>
+                        <option value="dessert" data-i18n="dessert">Dessert</option>
+                        <option value="drink" data-i18n="drink">Drink</option>
+                        <option value="side" data-i18n="side_dish">Side Dish</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="preparationTime" data-i18n="preparation_time">Preparation Time (minutes)</label>
+                    <input type="number" id="preparationTime" name="preparation_time" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="imageFile" data-i18n="image_file">Image File</label>
+                    <input type="file" id="imageFile" name="image" accept="image/*" onchange="previewImage(event)">
+                    <div id="imagePreview" style="margin-top: 10px; text-align: center;">
+                        <!-- Image preview will be shown here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isAvailable" name="is_available" checked>
+                        <span data-i18n="available_for_ordering">Available for ordering</span>
+                    </label>
+                </div>
+
+                <!-- Recipe Section -->
+                <div class="form-group">
+                    <h4 data-i18n="recipe_ingredients">Recipe Ingredients</h4>
+                    <div id="recipeIngredientsContainer">
+                        <!-- Recipe ingredient rows will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addRecipeIngredientRow()" style="margin-top: 10px;" data-i18n="add_ingredient">
+                        + Add Ingredient
+                    </button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save_item">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+        let currentEditingId = null;
+        let ingredientsCache = [];
+
+        const translations = {
+            en: {
+                language: 'Language',
+                menu_management_title: 'Menu Management',
+                back_to_dashboard: 'Back to Dashboard',
+                add_new_item: 'Add New Item',
+                loading_menu_items: 'Loading menu items...',
+                no_menu_items: 'No menu items found',
+                edit: 'Edit',
+                disable: 'Disable',
+                enable: 'Enable',
+                available: 'Available',
+                unavailable: 'Unavailable',
+                no_description: 'No description',
+                add_menu_item: 'Add Menu Item',
+                edit_menu_item: 'Edit Menu Item',
+                item_name: 'Item Name',
+                description: 'Description',
+                price: 'Price (₺)',
+                category: 'Category',
+                select_category: 'Select Category',
+                appetizer: 'Appetizer',
+                main_course: 'Main Course',
+                dessert: 'Dessert',
+                drink: 'Drink',
+                side_dish: 'Side Dish',
+                preparation_time: 'Preparation Time (minutes)',
+                image_file: 'Image File',
+                available_for_ordering: 'Available for ordering',
+                recipe_ingredients: 'Recipe Ingredients',
+                add_ingredient: '+ Add Ingredient',
+                select_ingredient: 'Select Ingredient',
+                quantity: 'Quantity',
+                cancel: 'Cancel',
+                save_item: 'Save Item',
+                delete: 'Delete',
+                confirm_delete: 'Are you sure you want to delete',
+                yes: 'Yes',
+                no: 'No'
+            },
+            ar: {
+                language: 'اللغة',
+                menu_management_title: 'إدارة القائمة',
+                back_to_dashboard: 'العودة إلى لوحة التحكم',
+                add_new_item: 'إضافة عنصر جديد',
+                loading_menu_items: 'جارٍ تحميل عناصر القائمة...',
+                no_menu_items: 'لم يتم العثور على عناصر قائمة',
+                edit: 'تعديل',
+                disable: 'تعطيل',
+                enable: 'تفعيل',
+                available: 'متاح',
+                unavailable: 'غير متاح',
+                no_description: 'لا يوجد وصف',
+                add_menu_item: 'إضافة عنصر قائمة',
+                edit_menu_item: 'تعديل عنصر القائمة',
+                item_name: 'اسم العنصر',
+                description: 'الوصف',
+                price: 'السعر (₺)',
+                category: 'الفئة',
+                select_category: 'اختر الفئة',
+                appetizer: 'مقبلات',
+                main_course: 'طبق رئيسي',
+                dessert: 'حلويات',
+                drink: 'مشروبات',
+                side_dish: 'طبق جانبي',
+                preparation_time: 'وقت التحضير (دقائق)',
+                image_file: 'ملف الصورة',
+                available_for_ordering: 'متاح للطلب',
+                recipe_ingredients: 'مكونات الوصفة',
+                add_ingredient: '+ إضافة مكون',
+                select_ingredient: 'اختر المكون',
+                quantity: 'الكمية',
+                cancel: 'إلغاء',
+                save_item: 'حفظ العنصر',
+                delete: 'حذف',
+                confirm_delete: 'هل أنت متأكد من حذف',
+                yes: 'نعم',
+                no: 'لا'
+            },
+            tr: {
+                language: 'Dil',
+                menu_management_title: 'Menü Yönetimi',
+                back_to_dashboard: 'Panele Dön',
+                add_new_item: 'Yeni Öğe Ekle',
+                loading_menu_items: 'Menü öğeleri yükleniyor...',
+                no_menu_items: 'Menü öğesi bulunamadı',
+                edit: 'Düzenle',
+                disable: 'Devre Dışı Bırak',
+                enable: 'Etkinleştir',
+                available: 'Mevcut',
+                unavailable: 'Mevcut Değil',
+                no_description: 'Açıklama yok',
+                add_menu_item: 'Menü Öğesi Ekle',
+                edit_menu_item: 'Menü Öğesini Düzenle',
+                item_name: 'Öğe Adı',
+                description: 'Açıklama',
+                price: 'Fiyat (₺)',
+                category: 'Kategori',
+                select_category: 'Kategori Seç',
+                appetizer: 'Meze',
+                main_course: 'Ana Yemek',
+                dessert: 'Tatlı',
+                drink: 'İçecek',
+                side_dish: 'Yan Yemek',
+                preparation_time: 'Hazırlama Süresi (dakika)',
+                image_file: 'Resim Dosyası',
+                available_for_ordering: 'Sipariş için mevcut',
+                recipe_ingredients: 'Tarif Malzemeleri',
+                add_ingredient: '+ Malzeme Ekle',
+                select_ingredient: 'Malzeme Seç',
+                quantity: 'Miktar',
+                cancel: 'İptal',
+                save_item: 'Öğeyi Kaydet',
+                delete: 'Sil',
+                confirm_delete: 'Silmek istediğinize emin misiniz',
+                yes: 'Evet',
+                no: 'Hayır'
+            }
+        };
+
+        function applyTranslations(lang) {
+            const dict = translations[lang] || translations.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.textContent = dict[key];
+                }
+            });
+            // Direction for Arabic
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+        }
+
+        function initI18n() {
+            const saved = localStorage.getItem('lang') || 'en';
+            applyTranslations(saved);
+
+            // Listen for global language changes
+            window.addEventListener('languageChanged', (event) => {
+                applyTranslations(event.detail.language);
+                loadMenuItems(); // Reload menu items when language changes
+            });
+        }
+
+        // Check authentication
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+
+        // Load ingredients for recipe management
+        async function loadIngredients() {
+            try {
+                const response = await fetch('/api/inventory');
+                ingredientsCache = await response.json();
+            } catch (error) {
+                console.error('Error loading ingredients:', error);
+            }
+        }
+
+        // Add recipe ingredient row
+        function addRecipeIngredientRow(ingredientId = '', quantity = '') {
+            const container = document.getElementById('recipeIngredientsContainer');
+            const row = document.createElement('div');
+            row.className = 'recipe-ingredient-row';
+            row.style.display = 'flex';
+            row.style.gap = '10px';
+            row.style.marginBottom = '10px';
+            row.style.alignItems = 'center';
+
+            const ingredientOptions = ingredientsCache.map(ing =>
+                `<option value="${ing.id}" ${ing.id == ingredientId ? 'selected' : ''}>${ing.name} (${ing.unit})</option>`
+            ).join('');
+
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            row.innerHTML = `
+                <select name="recipe_ingredient_id" required style="flex: 2;">
+                    <option value="">${dict.select_ingredient}</option>
+                    ${ingredientOptions}
+                </select>
+                <input type="number" name="recipe_quantity" value="${quantity}" step="0.01" min="0.01" required placeholder="${dict.quantity}" style="flex: 1;">
+                <select name="recipe_unit" style="flex: 1;">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="l">l</option>
+                    <option value="pieces">pieces</option>
+                </select>
+                <button type="button" onclick="this.parentElement.remove()" style="background:red;color:white;border:none;cursor:pointer;padding:5px 10px;">-</button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Load menu items
+        async function loadMenuItems() {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch('/api/menu');
+                if (response.ok) {
+                    const menuItems = await response.json();
+                    displayMenuItems(menuItems);
+                } else {
+                    console.error('Failed to load menu items');
+                }
+            } catch (error) {
+                console.error('Error loading menu items:', error);
+            }
+        }
+
+        // Display menu items in grid
+        function displayMenuItems(items) {
+            const grid = document.getElementById('menuGrid');
+            const loading = document.getElementById('loading');
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (items.length === 0) {
+                grid.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;">${dict.no_menu_items}</div>`;
+                loading.style.display = 'none';
+                return;
+            }
+
+            grid.innerHTML = items.map(item => `
+                <div class="menu-card">
+                    ${item.image_url ? `<div class="image-container"><img src="${item.image_url}" alt="${item.name}" class="item-image" onerror="this.style.display='none'"></div>` : ''}
+                    <h3>${item.name}</h3>
+                    <div class="price">₺${item.price}</div>
+                    <span class="category">${item.category}</span>
+                    <div class="status-badge ${item.is_available ? 'status-available' : 'status-unavailable'}">
+                        ${item.is_available ? dict.available : dict.unavailable}
+                    </div>
+                    <p class="description">${item.description || dict.no_description}</p>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="editItem(${item.id})">${dict.edit}</button>
+                        <button class="btn btn-secondary" onclick="toggleAvailability(${item.id}, ${!item.is_available})">
+                            ${item.is_available ? dict.disable : dict.enable}
+                        </button>
+                        <button class="btn" style="background: #dc3545; color: white;" onclick="deleteItem(${item.id}, '${item.name}')">${dict.delete || 'Delete'}</button>
+                    </div>
+                </div>
+            `).join('');
+
+            loading.style.display = 'none';
+        }
+
+        // Open add modal
+        async function openAddModal() {
+            if (!checkAuth()) return;
+
+            await loadIngredients();
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            document.getElementById('modalTitle').textContent = dict.add_menu_item;
+            clearForm();
+            document.getElementById('itemModal').style.display = 'block';
+            addRecipeIngredientRow(); // Add first ingredient row
+        }
+
+        // Edit item
+        async function editItem(id) {
+            if (!checkAuth()) return;
+
+            try {
+                await loadIngredients();
+                const response = await fetch(`/api/menu/${id}`);
+                if (response.ok) {
+                    const item = await response.json();
+                    fillEditForm(item);
+
+                    // Load recipe ingredients
+                    const recipeResponse = await fetch(`/api/menu/${id}/recipe`);
+                    if (recipeResponse.ok) {
+                        const recipe = await recipeResponse.json();
+                        document.getElementById('recipeIngredientsContainer').innerHTML = '';
+
+                        if (recipe.length > 0) {
+                            recipe.forEach(ingredient => {
+                                addRecipeIngredientRow(ingredient.ingredient_id, ingredient.quantity_required);
+                            });
+                        } else {
+                            addRecipeIngredientRow(); // Add empty row if no recipe
+                        }
+                    }
+
+                    const lang = localStorage.getItem('lang') || 'en';
+                    const dict = translations[lang] || translations.en;
+                    document.getElementById('modalTitle').textContent = dict.edit_menu_item;
+                    document.getElementById('itemModal').style.display = 'block';
+                    currentEditingId = id;
+                }
+            } catch (error) {
+                console.error('Error loading item:', error);
+            }
+        }
+
+        // Fill edit form
+        function fillEditForm(item) {
+            document.getElementById('itemId').value = item.id;
+            document.getElementById('name').value = item.name;
+            document.getElementById('description').value = item.description || '';
+            document.getElementById('price').value = item.price;
+            document.getElementById('category').value = item.category;
+            document.getElementById('preparationTime').value = item.preparation_time || '';
+            document.getElementById('isAvailable').checked = item.is_available;
+            
+            // Show current image preview if exists
+            const preview = document.getElementById('imagePreview');
+            if (item.image_url) {
+                preview.innerHTML = `<img src="${item.image_url}" alt="Current Image" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><br><small>Current image (choose new file to replace)</small>`;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('itemModal').style.display = 'none';
+            clearForm();
+        }
+
+        // Toggle item availability
+        async function toggleAvailability(id, available) {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ is_available: available })
+                });
+
+                if (response.ok) {
+                    loadMenuItems();
+                } else {
+                    console.error('Failed to update availability');
+                }
+            } catch (error) {
+                console.error('Error updating availability:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('itemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!checkAuth()) return;
+
+            const formData = new FormData(this);
+            
+            // Set the is_available value correctly for the checkbox
+            formData.set('is_available', document.getElementById('isAvailable').checked ? 'true' : 'false');
+
+            try {
+                const url = currentEditingId ? `/api/menu/${currentEditingId}` : '/api/menu';
+                const method = currentEditingId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData  // Send FormData directly for file upload support
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadMenuItems();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Failed to save item:', errorData);
+                    alert(errorData.error || 'Failed to save item');
+                }
+            } catch (error) {
+                console.error('Error saving item:', error);
+                alert('Error saving item: ' + error.message);
+            }
+        });
+
+        // Image preview function
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        // Clear form function
+        function clearForm() {
+            document.getElementById('itemForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('recipeIngredientsContainer').innerHTML = '';
+            currentEditingId = null;
+        }
+
+        // Delete item
+        async function deleteItem(id, name) {
+            if (!checkAuth()) return;
+
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (confirm(`${dict.confirm_delete} "${name}"?`)) {
+                try {
+                    const response = await fetch(`/api/menu/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadMenuItems(); // Refresh the menu items
+                    } else {
+                        console.error('Failed to delete item');
+                        alert('Failed to delete item');
+                    }
+                } catch (error) {
+                    console.error('Error deleting item:', error);
+                    alert('Error deleting item');
+                }
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('itemModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Initialize
+        checkAuth();
+        initI18n();
+        loadMenuItems();
+</script>
+{% endblock %}

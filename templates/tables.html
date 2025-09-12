@@ -1,0 +1,772 @@
+{% extends "base.html" %}
+
+{% block title %}Table Management - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .table-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .table-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .table-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .table-card h3 {
+            margin: 0 0 12px 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .table-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .table-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+        }
+        .table-info-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .table-info-value {
+            color: #2d3748;
+        }
+        .table-card .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 15px;
+            text-align: center;
+            width: 100%;
+        }
+        .status-available {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+        }
+        .status-occupied {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+        .status-reserved {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+        .status-cleaning {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #3730a3;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-group select {
+            cursor: pointer;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .stats-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="header">
+        <h1 data-i18n="table_management_title">Table Management</h1>
+        <div class="header-actions">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="openAddModal()" data-i18n="add_new_table">Add New Table</button>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-section">
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+    </div>
+
+    <div class="tables-grid" id="tablesGrid">
+        <!-- Tables will be loaded here -->
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 40px;" data-i18n="loading_tables">
+        Loading tables...
+    </div>
+</div>
+
+    <!-- Add/Edit Modal -->
+    <div id="tableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-i18n="add_table">Add Table</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form id="tableForm">
+                <input type="hidden" id="tableId">
+
+                <div class="form-group">
+                    <label for="tableNumber" data-i18n="table_number">Table Number</label>
+                    <input type="number" id="tableNumber" name="table_number" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="capacity" data-i18n="capacity">Capacity</label>
+                    <input type="number" id="capacity" name="capacity" required min="1" max="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="location" data-i18n="location">Location</label>
+                    <select id="location" name="location">
+                        <option value="indoor" data-i18n="indoor">Indoor</option>
+                        <option value="outdoor" data-i18n="outdoor">Outdoor</option>
+                        <option value="bar" data-i18n="bar">Bar</option>
+                        <option value="patio" data-i18n="patio">Patio</option>
+                        <option value="private" data-i18n="private">Private Room</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status" data-i18n="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="available" data-i18n="available">Available</option>
+                        <option value="occupied" data-i18n="occupied">Occupied</option>
+                        <option value="reserved" data-i18n="reserved">Reserved</option>
+                        <option value="cleaning" data-i18n="cleaning">Cleaning</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save_table">Save Table</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+        let currentEditingId = null;
+
+        const translations = {
+            en: {
+                language: 'Language',
+                table_management_title: 'Table Management',
+                back_to_dashboard: 'Back to Dashboard',
+                add_new_table: 'Add New Table',
+                loading_tables: 'Loading tables...',
+                no_tables: 'No tables found',
+                edit: 'Edit',
+                delete: 'Delete',
+                available: 'Available',
+                occupied: 'Occupied',
+                reserved: 'Reserved',
+                cleaning: 'Cleaning',
+                add_table: 'Add Table',
+                edit_table: 'Edit Table',
+                table_number: 'Table Number',
+                capacity: 'Capacity',
+                location: 'Location',
+                status: 'Status',
+                indoor: 'Indoor',
+                outdoor: 'Outdoor',
+                bar: 'Bar',
+                patio: 'Patio',
+                private: 'Private Room',
+                cancel: 'Cancel',
+                save_table: 'Save Table',
+                confirm_delete: 'Are you sure you want to delete table',
+                yes: 'Yes',
+                no: 'No',
+                total_tables: 'Total Tables',
+                available_tables: 'Available',
+                occupied_tables: 'Occupied',
+                reserved_tables: 'Reserved',
+                cleaning_tables: 'Cleaning'
+            },
+            ar: {
+                language: 'اللغة',
+                table_management_title: 'إدارة الطاولات',
+                back_to_dashboard: 'العودة إلى لوحة التحكم',
+                add_new_table: 'إضافة طاولة جديدة',
+                loading_tables: 'جارٍ تحميل الطاولات...',
+                no_tables: 'لم يتم العثور على طاولات',
+                edit: 'تعديل',
+                delete: 'حذف',
+                available: 'متاح',
+                occupied: 'مشغول',
+                reserved: 'محجوز',
+                cleaning: 'تنظيف',
+                add_table: 'إضافة طاولة',
+                edit_table: 'تعديل الطاولة',
+                table_number: 'رقم الطاولة',
+                capacity: 'السعة',
+                location: 'الموقع',
+                status: 'الحالة',
+                indoor: 'داخلي',
+                outdoor: 'خارجي',
+                bar: 'بار',
+                patio: 'فناء',
+                private: 'غرفة خاصة',
+                cancel: 'إلغاء',
+                save_table: 'حفظ الطاولة',
+                confirm_delete: 'هل أنت متأكد من حذف الطاولة',
+                yes: 'نعم',
+                no: 'لا',
+                total_tables: 'إجمالي الطاولات',
+                available_tables: 'متاحة',
+                occupied_tables: 'مشغولة',
+                reserved_tables: 'محجوزة',
+                cleaning_tables: 'قيد التنظيف'
+            },
+            tr: {
+                language: 'Dil',
+                table_management_title: 'Masa Yönetimi',
+                back_to_dashboard: 'Panele Dön',
+                add_new_table: 'Yeni Masa Ekle',
+                loading_tables: 'Masalar yükleniyor...',
+                no_tables: 'Masa bulunamadı',
+                edit: 'Düzenle',
+                delete: 'Sil',
+                available: 'Müsait',
+                occupied: 'Dolu',
+                reserved: 'Rezerve',
+                cleaning: 'Temizleniyor',
+                add_table: 'Masa Ekle',
+                edit_table: 'Masayı Düzenle',
+                table_number: 'Masa Numarası',
+                capacity: 'Kapasite',
+                location: 'Konum',
+                status: 'Durum',
+                indoor: 'İç Mekan',
+                outdoor: 'Dış Mekan',
+                bar: 'Bar',
+                patio: 'Bahçe',
+                private: 'Özel Oda',
+                cancel: 'İptal',
+                save_table: 'Masayı Kaydet',
+                confirm_delete: 'Bu masayı silmek istediğinize emin misiniz',
+                yes: 'Evet',
+                no: 'Hayır',
+                total_tables: 'Toplam Masa',
+                available_tables: 'Müsait',
+                occupied_tables: 'Dolu',
+                reserved_tables: 'Rezerve',
+                cleaning_tables: 'Temizleniyor'
+            }
+        };
+
+        function applyTranslations(lang) {
+            const dict = translations[lang] || translations.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.textContent = dict[key];
+                }
+            });
+            // Direction for Arabic
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+        }
+
+        function initI18n() {
+            const saved = localStorage.getItem('lang') || 'en';
+            applyTranslations(saved);
+
+            // Listen for global language changes
+            window.addEventListener('languageChanged', (event) => {
+                applyTranslations(event.detail.language);
+                loadTables(); // Reload tables when language changes
+            });
+        }
+
+        // Check authentication
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+
+        // Load tables
+        async function loadTables() {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch('/api/tables');
+                if (response.ok) {
+                    const tables = await response.json();
+                    displayTables(tables);
+                    updateStats(tables);
+                } else {
+                    console.error('Failed to load tables');
+                }
+            } catch (error) {
+                console.error('Error loading tables:', error);
+            }
+        }
+
+        // Update statistics
+        function updateStats(tables) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            const total = tables.length;
+            const available = tables.filter(t => t.status === 'available').length;
+            const occupied = tables.filter(t => t.status === 'occupied').length;
+            const reserved = tables.filter(t => t.status === 'reserved').length;
+            const cleaning = tables.filter(t => t.status === 'cleaning').length;
+
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-number">${total}</div>
+                    <div class="stat-label">${dict.total_tables || 'Total Tables'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${available}</div>
+                    <div class="stat-label">${dict.available_tables || 'Available'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${occupied}</div>
+                    <div class="stat-label">${dict.occupied_tables || 'Occupied'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${reserved}</div>
+                    <div class="stat-label">${dict.reserved_tables || 'Reserved'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${cleaning}</div>
+                    <div class="stat-label">${dict.cleaning_tables || 'Cleaning'}</div>
+                </div>
+            `;
+
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+
+        // Display tables in grid
+        function displayTables(tables) {
+            const grid = document.getElementById('tablesGrid');
+            const loading = document.getElementById('loading');
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (tables.length === 0) {
+                grid.innerHTML = `<div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">${dict.no_tables}</div>`;
+                loading.style.display = 'none';
+                return;
+            }
+
+            grid.innerHTML = tables.map(table => `
+                <div class="table-card">
+                    <h3>Table ${table.table_number}</h3>
+                    <span class="status-badge status-${table.status}">
+                        ${dict[table.status] || table.status}
+                    </span>
+                    <div class="table-info">
+                        <div class="table-info-item">
+                            <span class="table-info-label">${dict.capacity}:</span>
+                            <span class="table-info-value">${table.capacity} ${dict.capacity.toLowerCase().includes('person') ? '' : 'people'}</span>
+                        </div>
+                        <div class="table-info-item">
+                            <span class="table-info-label">${dict.location}:</span>
+                            <span class="table-info-value">${dict[table.location] || table.location}</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="editTable(${table.id})">${dict.edit}</button>
+                        <button class="btn" style="background: #dc3545; color: white;" onclick="deleteTable(${table.id}, ${table.table_number})">${dict.delete}</button>
+                    </div>
+                </div>
+            `).join('');
+
+            loading.style.display = 'none';
+        }
+
+        // Open add modal
+        async function openAddModal() {
+            if (!checkAuth()) return;
+
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            document.getElementById('modalTitle').textContent = dict.add_table;
+            document.getElementById('tableForm').reset();
+            document.getElementById('tableId').value = '';
+            currentEditingId = null;
+            document.getElementById('tableModal').style.display = 'block';
+        }
+
+        // Edit table
+        async function editTable(id) {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch(`/api/tables`);
+                if (response.ok) {
+                    const tables = await response.json();
+                    const table = tables.find(t => t.id === id);
+
+                    if (table) {
+                        fillEditForm(table);
+
+                        const lang = localStorage.getItem('lang') || 'en';
+                        const dict = translations[lang] || translations.en;
+                        document.getElementById('modalTitle').textContent = dict.edit_table;
+                        document.getElementById('tableModal').style.display = 'block';
+                        currentEditingId = id;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading table:', error);
+            }
+        }
+
+        // Fill edit form
+        function fillEditForm(table) {
+            document.getElementById('tableId').value = table.id;
+            document.getElementById('tableNumber').value = table.table_number;
+            document.getElementById('capacity').value = table.capacity;
+            document.getElementById('location').value = table.location;
+            document.getElementById('status').value = table.status;
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('tableModal').style.display = 'none';
+        }
+
+        // Handle form submission
+        document.getElementById('tableForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!checkAuth()) return;
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Convert types
+            data.table_number = parseInt(data.table_number);
+            data.capacity = parseInt(data.capacity);
+
+            try {
+                const url = currentEditingId ? `/api/tables/${currentEditingId}` : '/api/tables';
+                const method = currentEditingId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadTables();
+                } else {
+                    const error = await response.json();
+                    console.error('Failed to save table:', error);
+                    alert('Failed to save table: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving table:', error);
+                alert('Error saving table: ' + error.message);
+            }
+        });
+
+        // Delete table
+        async function deleteTable(id, tableNumber) {
+            if (!checkAuth()) return;
+
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (confirm(`${dict.confirm_delete || 'Are you sure you want to delete table'} ${tableNumber}?`)) {
+                try {
+                    const response = await fetch(`/api/tables/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadTables(); // Refresh the tables
+                    } else {
+                        console.error('Failed to delete table');
+                        alert('Failed to delete table');
+                    }
+                } catch (error) {
+                    console.error('Error deleting table:', error);
+                    alert('Error deleting table');
+                }
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('tableModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Initialize
+        checkAuth();
+        initI18n();
+        loadTables();
+</script>
+{% endblock %}

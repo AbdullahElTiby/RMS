@@ -1,0 +1,718 @@
+{% extends "base.html" %}
+
+{% block title %}Point of Sale & Orders - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .orders-table th, .orders-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .orders-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .orders-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        .status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+        .status-confirmed { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
+        .status-completed { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .status-cancelled { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .status-cooking { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .status-ready { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .status-served { background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%); }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .order-items-section h4 {
+            margin-top: 0;
+            color: #2d3748;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        #orderItemsContainer .item-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        #orderItemsContainer .item-row select { flex: 3; }
+        #orderItemsContainer .item-row input { flex: 1; }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="header">
+        <h1 data-i18n="pos_orders">Point of Sale & Orders</h1>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="openNewOrderModal()" data-i18n="create_order">Create New Order</button>
+        </div>
+    </div>
+    <table class="orders-table" id="ordersTable">
+        <thead>
+            <tr>
+                <th data-i18n="order_id">Order ID</th>
+                <th data-i18n="type">Type</th>
+                <th data-i18n="status">Status</th>
+                <th data-i18n="table">Table</th>
+                <th data-i18n="amount">Amount</th>
+                <th data-i18n="date">Date</th>
+                <th data-i18n="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Orders will be loaded here -->
+        </tbody>
+    </table>
+    <div id="loading" style="text-align: center; padding: 40px;">Loading orders...</div>
+</div>
+
+    <!-- New Order Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="create_order">Create New Order</h2>
+                <button class="close-btn" onclick="closeModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="orderType" data-i18n="order_type">Order Type</label>
+                    <select id="orderType" name="order_type" required onchange="handleOrderTypeChange()">
+                        <!-- Order types will be populated based on business model -->
+                    </select>
+                </div>
+                <div class="form-group" id="tableGroup" style="display: none;">
+                    <label for="tableId" data-i18n="table">Table</label>
+                    <select id="tableId" name="table_id">
+                        <!-- Tables will be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group" id="deliveryGroup" style="display: none;">
+                    <label for="deliveryAddress" data-i18n="delivery_address">Delivery Address</label>
+                    <textarea id="deliveryAddress" name="delivery_address" rows="3" placeholder="Enter delivery address..."></textarea>
+                </div>
+                <div class="form-group" id="customerGroup">
+                    <label for="customerId" data-i18n="customer">Customer</label>
+                    <select id="customerId" name="customer_id">
+                        <!-- Customers will be loaded here -->
+                    </select>
+                </div>
+                <div class="order-items-section">
+                    <h4 data-i18n="order_items">Order Items</h4>
+                    <div id="orderItemsContainer">
+                        <!-- Item rows will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addOrderItemRow()" data-i18n="add_item">+ Add Item</button>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="create_order">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="record_payment">Record Payment</h2>
+                <button class="close-btn" onclick="closePaymentModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="paymentForm">
+                <input type="hidden" id="paymentOrderId">
+                <div id="loyaltyInfo" class="form-group" style="display:none; color:#007bff;"></div>
+                <div class="form-group" style="display:flex; gap:10px; align-items:center;">
+                    <button type="button" id="applyLoyaltyBtn" class="btn btn-secondary" style="display:none;">${t('apply_loyalty')}</button>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="amount">Amount</label>
+                    <input type="number" id="paymentAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="method">Method</label>
+                    <select id="paymentMethod" required>
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="mobile">Mobile Wallet</option>
+                        <option value="online">Online</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="transaction_id_optional">Transaction ID (optional)</label>
+                    <input type="text" id="paymentTxnId">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save_payment">Save Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    let menuItemsCache = [];
+    let businessModelSettings = {};
+
+    // Load business model settings from API
+    async function loadBusinessModelSettings() {
+        try {
+            const response = await fetch('/api/settings');
+            const settings = await response.json();
+            businessModelSettings = {
+                serviceType: settings.serviceType || 'tables',
+                enableTableManagement: settings.enableTableManagement !== false,
+                enableDelivery: settings.enableDelivery || false,
+                deliveryRadius: settings.deliveryRadius || 10,
+                deliveryFee: settings.deliveryFee || 5.00,
+                minOrderAmount: settings.minOrderAmount || 25.00
+            };
+        } catch (error) {
+            console.error('Error loading settings from API:', error);
+            // Fallback to defaults
+            businessModelSettings = {
+                serviceType: 'tables',
+                enableTableManagement: true,
+                enableDelivery: false,
+                deliveryRadius: 10,
+                deliveryFee: 5.00,
+                minOrderAmount: 25.00
+            };
+        }
+        return businessModelSettings;
+    }
+
+    async function checkAuth() {
+        if (!localStorage.getItem('user')) {
+            window.location.href = '/login';
+            return false;
+        }
+        return true;
+    }
+
+    async function loadOrders() {
+        if (!await checkAuth()) return;
+        try {
+            const response = await fetch('/api/orders');
+            const orders = await response.json();
+            displayOrders(orders);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            document.getElementById('loading').textContent = dict.failed_to_load || 'Failed to load orders.';
+        }
+    }
+
+    function displayOrders(orders) {
+        const tableBody = document.querySelector('#ordersTable tbody');
+        const loading = document.getElementById('loading');
+        tableBody.innerHTML = '';
+        if (orders.length === 0) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            loading.textContent = dict.no_orders_found || 'No orders found.';
+            return;
+        }
+        orders.forEach(order => {
+            const row = `
+                <tr>
+                    <td>${order.id}</td>
+                    <td>${order.order_type}</td>
+                    <td><span class="status-badge status-${order.status}">${t('status_' + order.status) || order.status}</span></td>
+                    <td>${order.table_number || 'N/A'}</td>
+                    <td>₺${order.final_amount.toFixed(2)}</td>
+                    <td>${new Date(order.created_at).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewOrder(${order.id})">${t('details')}</button>
+                        <button class="btn btn-primary" onclick="openPaymentModal(${order.id}, ${order.final_amount}, ${order.customer_id || 'null'})">${t('pay')}</button>
+                        <a class="btn btn-secondary" href="/receipt/${order.id}" target="_blank">${t('receipt')}</a>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+        loading.style.display = 'none';
+    }
+    
+    async function openNewOrderModal() {
+        await loadPrerequisites();
+        document.getElementById('orderModal').style.display = 'block';
+        addOrderItemRow(); // Add the first item row
+    }
+    
+    function closeModal() {
+        document.getElementById('orderModal').style.display = 'none';
+        document.getElementById('orderForm').reset();
+        document.getElementById('orderItemsContainer').innerHTML = ''; // Clear items
+    }
+    
+    async function loadPrerequisites() {
+        // Load business model settings
+        loadBusinessModelSettings();
+
+        // Populate order types based on business model
+        populateOrderTypes();
+
+        // Load menu items (only available ones)
+        const menuResponse = await fetch('/api/menu');
+        const allMenuItems = await menuResponse.json();
+        menuItemsCache = allMenuItems.filter(item => item.is_available); // Filter out unavailable items
+
+        // Load tables for dine-in (only if table management is enabled)
+        if (businessModelSettings.enableTableManagement) {
+            const tablesResponse = await fetch('/api/tables');
+            const tables = await tablesResponse.json();
+            const tableSelect = document.getElementById('tableId');
+            tableSelect.innerHTML = tables
+                .filter(t => t.status === 'available')
+                .map(t => `<option value="${t.id}">Table ${t.table_number} (${t.capacity} seats)</option>`).join('');
+        }
+
+        // Load customers
+        const customersResponse = await fetch('/api/customers');
+        const customers = await customersResponse.json();
+        const customerSelect = document.getElementById('customerId');
+        customerSelect.innerHTML = `<option value="">Guest</option>` + customers
+            .map(c => `<option value="${c.id}">${(c.first_name||'') + ' ' + (c.last_name||'')} ${c.phone?'- '+c.phone:''}</option>`).join('');
+    }
+
+    // Populate order types - only Dine-In for simplicity
+    function populateOrderTypes() {
+        const orderTypeSelect = document.getElementById('orderType');
+        orderTypeSelect.innerHTML = '';
+
+        // Only include dine-in option
+        const dineInOption = document.createElement('option');
+        dineInOption.value = 'dine-in';
+        dineInOption.textContent = t('dine_in') || 'Dine-In';
+        dineInOption.selected = true; // Make it selected by default
+        orderTypeSelect.appendChild(dineInOption);
+
+        // Trigger change event to update form fields
+        handleOrderTypeChange();
+    }
+
+    // Handle order type change
+    function handleOrderTypeChange() {
+        const orderType = document.getElementById('orderType').value;
+        const tableGroup = document.getElementById('tableGroup');
+        const deliveryGroup = document.getElementById('deliveryGroup');
+
+        // Show/hide table selection
+        if (orderType === 'dine-in' && businessModelSettings.enableTableManagement) {
+            tableGroup.style.display = 'block';
+        } else {
+            tableGroup.style.display = 'none';
+        }
+
+        // Show/hide delivery address
+        if (orderType === 'delivery') {
+            deliveryGroup.style.display = 'block';
+        } else {
+            deliveryGroup.style.display = 'none';
+        }
+    }
+
+    function addOrderItemRow() {
+        const container = document.getElementById('orderItemsContainer');
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        
+        const menuOptions = menuItemsCache.map(item => `<option value="${item.id}">${item.name} - ₺${item.price}</option>`).join('');
+        
+        itemRow.innerHTML = `
+            <select name="menu_item_id" required>${menuOptions}</select>
+            <input type="number" name="quantity" value="1" min="1" required placeholder="Qty">
+            <button type="button" onclick="this.parentElement.remove()" style="background:red;color:white;border:none;cursor:pointer;padding:5px 10px;">-</button>
+        `;
+        container.appendChild(itemRow);
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const orderType = formData.get('order_type');
+
+        const data = {
+            order_type: orderType,
+            table_id: orderType === 'dine-in' ? formData.get('table_id') : null,
+            delivery_address: orderType === 'delivery' ? formData.get('delivery_address') : null,
+            customer_id: formData.get('customer_id') || null,
+            items: []
+        };
+
+        const itemIds = formData.getAll('menu_item_id');
+        const quantities = formData.getAll('quantity');
+
+        for(let i=0; i < itemIds.length; i++) {
+            data.items.push({
+                menu_item_id: parseInt(itemIds[i]),
+                quantity: parseInt(quantities[i])
+            });
+        }
+
+        // Validate delivery requirements
+        if (orderType === 'delivery') {
+            if (!data.delivery_address || data.delivery_address.trim() === '') {
+                alert(t('delivery_address_required') || 'Delivery address is required for delivery orders.');
+                return;
+            }
+
+            // Check minimum order amount for delivery
+            const totalAmount = data.items.reduce((sum, item) => {
+                const menuItem = menuItemsCache.find(m => m.id === item.menu_item_id);
+                return sum + (menuItem ? menuItem.price * item.quantity : 0);
+            }, 0);
+
+            if (totalAmount < businessModelSettings.minOrderAmount) {
+                alert(`${t('min_order_amount_required') || 'Minimum order amount required'}: ₺${businessModelSettings.minOrderAmount}`);
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                closeModal();
+                loadOrders();
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to create order: ${errorData.message || 'Unknown error'}`);
+                console.error(errorData);
+            }
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('Failed to create order. Please try again.');
+        }
+    });
+    
+    function viewOrder(id) {
+        // This could open a detailed view, for now, just log it.
+        console.log("Viewing details for order ID:", id);
+        window.location.href = `/api/orders/${id}`;
+    }
+
+    async function fetchCustomerPoints(customerId) {
+        if (!customerId) return 0;
+        try {
+            const res = await fetch('/api/customers');
+            const list = await res.json();
+            const found = list.find(c => c.id === customerId);
+            return found ? (found.loyalty_points || 0) : 0;
+        } catch { return 0; }
+    }
+
+    async function openPaymentModal(orderId, amountDue, customerId) {
+        document.getElementById('paymentOrderId').value = orderId;
+        document.getElementById('paymentAmount').value = Number(amountDue).toFixed(2);
+        document.getElementById('paymentModal').style.display = 'block';
+        const points = await fetchCustomerPoints(customerId);
+        const info = document.getElementById('loyaltyInfo');
+        const applyBtn = document.getElementById('applyLoyaltyBtn');
+        if (points > 0) {
+            info.textContent = `${t('loyalty_available')}: ${points}`;
+            info.style.display = 'block';
+            applyBtn.style.display = 'inline-block';
+            applyBtn.onclick = () => applyLoyalty(orderId, points);
+        } else {
+            info.style.display = 'none';
+            applyBtn.style.display = 'none';
+        }
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('paymentForm').reset();
+    }
+
+    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const orderId = document.getElementById('paymentOrderId').value;
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        const method = document.getElementById('paymentMethod').value;
+        const transaction_id = document.getElementById('paymentTxnId').value || null;
+
+        try {
+            const response = await fetch(`/api/orders/${orderId}/payments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, method, transaction_id })
+            });
+            if (response.ok) {
+                closePaymentModal();
+                loadOrders();
+            } else {
+                alert('Failed to record payment.');
+            }
+        } catch (err) {
+            console.error('Payment error:', err);
+        }
+    });
+
+    async function applyLoyalty(orderId, maxPoints) {
+        const toRedeemStr = prompt(t('enter_points_to_redeem'), Math.min(maxPoints, 1000));
+        if (toRedeemStr == null) return;
+        const toRedeem = parseInt(toRedeemStr);
+        if (!toRedeem || toRedeem <= 0) return alert(t('invalid_points'));
+        try {
+            const res = await fetch(`/api/orders/${orderId}/apply-loyalty`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ points: toRedeem })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('paymentAmount').value = Number(data.final_amount).toFixed(2);
+                alert(t('loyalty_applied'));
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || t('loyalty_apply_failed'));
+            }
+        } catch (e) {
+            alert(t('loyalty_apply_failed'));
+        }
+    }
+
+    // i18n
+    const translations = {
+        en: { pos_orders: 'Point of Sale & Orders', language: 'Language', back_to_dashboard: 'Back to Dashboard', create_order: 'Create New Order', order_id: 'Order ID', type: 'Type', status: 'Status', table: 'Table', amount: 'Amount', date: 'Date', actions: 'Actions', order_type: 'Order Type', order_items: 'Order Items', add_item: '+ Add Item', cancel: 'Cancel', record_payment: 'Record Payment', method: 'Method', transaction_id_optional: 'Transaction ID (optional)', save_payment: 'Save Payment', details: 'Details', pay: 'Pay', receipt: 'Receipt', customer: 'Customer', status_pending: 'Pending', status_confirmed: 'Confirmed', status_cooking: 'Cooking', status_ready: 'Ready', status_served: 'Served', status_completed: 'Completed', status_cancelled: 'Cancelled', takeaway: 'Takeaway', dine_in: 'Dine-In', delivery: 'Delivery', delivery_address: 'Delivery Address', delivery_address_required: 'Delivery address is required for delivery orders.', min_order_amount_required: 'Minimum order amount required' },
+        ar: { pos_orders: 'نقطة البيع والطلبات', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', create_order: 'إنشاء طلب جديد', order_id: 'معرّف الطلب', type: 'النوع', status: 'الحالة', table: 'الطاولة', amount: 'المبلغ', date: 'التاريخ', actions: 'الإجراءات', order_type: 'نوع الطلب', order_items: 'عناصر الطلب', add_item: '+ إضافة عنصر', cancel: 'إلغاء', record_payment: 'تسجيل الدفع', method: 'الطريقة', transaction_id_optional: 'معرّف العملية (اختياري)', save_payment: 'حفظ الدفع', details: 'التفاصيل', pay: 'ادفع', receipt: 'الإيصال', customer: 'العميل', status_pending: 'معلق', status_confirmed: 'مؤكد', status_cooking: 'قيد الطهي', status_ready: 'جاهز', status_served: 'مُقدَّم', status_completed: 'مكتمل', status_cancelled: 'ملغى', takeaway: 'سفري', dine_in: 'تناول في المكان', delivery: 'توصيل', delivery_address: 'عنوان التوصيل', delivery_address_required: 'عنوان التوصيل مطلوب لطلبات التوصيل.', min_order_amount_required: 'الحد الأدنى لمبلغ الطلب مطلوب' },
+        tr: { pos_orders: 'POS ve Siparişler', language: 'Dil', back_to_dashboard: 'Panele Dön', create_order: 'Yeni Sipariş Oluştur', order_id: 'Sipariş No', type: 'Tür', status: 'Durum', table: 'Masa', amount: 'Tutar', date: 'Tarih', actions: 'İşlemler', order_type: 'Sipariş Türü', order_items: 'Sipariş Kalemleri', add_item: '+ Kalem Ekle', cancel: 'İptal', record_payment: 'Ödeme Kaydet', method: 'Yöntem', transaction_id_optional: 'İşlem No (opsiyonel)', save_payment: 'Ödemeyi Kaydet', details: 'Detaylar', pay: 'Öde', receipt: 'Fiş', customer: 'Müşteri', status_pending: 'Beklemede', status_confirmed: 'Onaylandı', status_cooking: 'Pişiriliyor', status_ready: 'Hazır', status_served: 'Servis Edildi', status_completed: 'Tamamlandı', status_cancelled: 'İptal Edildi', takeaway: 'Paket Servis', dine_in: 'Yemek Salonu', delivery: 'Teslimat', delivery_address: 'Teslimat Adresi', delivery_address_required: 'Teslimat siparişleri için teslimat adresi gereklidir.', min_order_amount_required: 'Minimum sipariş tutarı gerekli' }
+    };
+    function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
+    function applyTranslations(lang) {
+        const dict = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) el.textContent = dict[key];
+        });
+        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+    }
+    function initI18n() {
+        const saved = localStorage.getItem('lang') || 'en';
+        applyTranslations(saved);
+
+        // Listen for global language changes
+        window.addEventListener('languageChanged', (event) => {
+            applyTranslations(event.detail.language);
+            loadOrders(); // Reload orders when language changes
+        });
+    }
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+        initI18n();
+        loadOrders();
+    });
+</script>
+{% endblock %}

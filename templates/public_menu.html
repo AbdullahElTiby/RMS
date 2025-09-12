@@ -1,0 +1,692 @@
+{% extends "base.html" %}
+
+{% block title %}Our Menu - Restaurant{% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* Hide sidebar for public menu */
+        .sidebar {
+            display: none !important;
+        }
+
+        /* Adjust main content for full width */
+        .main-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+
+        /* Hide sidebar toggle button */
+        .sidebar-toggle {
+            display: none !important;
+        }
+
+        /* Hide sidebar overlay */
+        .sidebar-overlay {
+            display: none !important;
+        }
+
+        .public-menu {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .menu-header {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .menu-header h1 {
+            font-size: 3rem;
+            margin: 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .menu-header p {
+            font-size: 1.2rem;
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .menu-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-input {
+            position: relative;
+        }
+
+        .search-input::before {
+            content: '🔍';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .search-input input {
+            padding-right: 40px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .category-section {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .category-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .category-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .category-description {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .menu-items {
+            padding: 20px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f8fafc;
+        }
+
+        .menu-item.unavailable {
+            opacity: 0.6;
+            background: #f9f9f9;
+        }
+
+        .menu-item.unavailable:hover {
+            background: #f9f9f9;
+        }
+
+        .out-of-stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .menu-item-price.unavailable {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .menu-item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-right: 20px;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #9ca3af;
+        }
+
+        .menu-item-content {
+            flex: 1;
+        }
+
+        .menu-item-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+
+        .menu-item-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            line-height: 1.5;
+        }
+
+        .menu-item-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-item-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .menu-item-time {
+            color: #6b7280;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item-time::before {
+            content: '⏱️';
+            margin-right: 5px;
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .menu-header h1 {
+                font-size: 2rem;
+            }
+
+            .menu-header p {
+                font-size: 1rem;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .menu-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .menu-item-image {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .menu-item-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-container {
+                padding: 20px 15px;
+            }
+
+            .filters-section {
+                padding: 20px;
+            }
+
+            .menu-item-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="public-menu">
+    <header class="menu-header">
+        <h1 data-i18n="our_menu">Our Menu</h1>
+        <p data-i18n="menu_description">Discover our delicious dishes crafted with the finest ingredients</p>
+    </header>
+
+    <div class="menu-container">
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="searchInput" data-i18n="search_menu">Search Menu</label>
+                    <div class="search-input">
+                        <input type="text" id="searchInput" placeholder="Search for dishes..." data-i18n-placeholder="search_placeholder">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="categoryFilter" data-i18n="filter_by_category">Filter by Category</label>
+                    <select id="categoryFilter">
+                        <option value="all" data-i18n="all_categories">All Categories</option>
+                        <option value="appetizer" data-i18n="appetizers">Appetizers</option>
+                        <option value="main" data-i18n="main_courses">Main Courses</option>
+                        <option value="dessert" data-i18n="desserts">Desserts</option>
+                        <option value="drink" data-i18n="beverages">Beverages</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="priceFilter" data-i18n="filter_by_price">Filter by Price</label>
+                    <select id="priceFilter">
+                        <option value="all" data-i18n="all_prices">All Prices</option>
+                        <option value="low" data-i18n="under_15">Under $15</option>
+                        <option value="medium" data-i18n="15_to_30">$15 - $30</option>
+                        <option value="high" data-i18n="over_30">Over $30</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sortBy" data-i18n="sort_by">Sort By</label>
+                    <select id="sortBy">
+                        <option value="name" data-i18n="name">Name</option>
+                        <option value="price-low" data-i18n="price_low_to_high">Price: Low to High</option>
+                        <option value="price-high" data-i18n="price_high_to_low">Price: High to Low</option>
+                        <option value="category" data-i18n="category">Category</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Menu Categories -->
+        <div id="menuContent">
+            <!-- Menu items will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" onclick="scrollToTop()" title="Back to Top">↑</button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allMenuItems = [];
+    let filteredItems = [];
+
+    // Translations for public menu
+    const publicMenuTranslations = {
+        en: {
+            our_menu: 'Our Menu',
+            menu_description: 'Discover our delicious dishes crafted with the finest ingredients',
+            search_menu: 'Search Menu',
+            search_placeholder: 'Search for dishes...',
+            filter_by_category: 'Filter by Category',
+            all_categories: 'All Categories',
+            appetizers: 'Appetizers',
+            main_courses: 'Main Courses',
+            desserts: 'Desserts',
+            beverages: 'Beverages',
+            filter_by_price: 'Filter by Price',
+            all_prices: 'All Prices',
+            under_15: 'Under $15',
+            '15_to_30': '$15 - $30',
+            over_30: 'Over $30',
+            sort_by: 'Sort By',
+            name: 'Name',
+            price_low_to_high: 'Price: Low to High',
+            price_high_to_low: 'Price: High to Low',
+            category: 'Category',
+            no_items_found: 'No items found matching your criteria.',
+            preparation_time: 'Preparation time',
+            minutes: 'minutes'
+        },
+        ar: {
+            our_menu: 'قائمتنا',
+            menu_description: 'اكتشف أطباقنا الشهية المصنوعة من أجود المكونات',
+            search_menu: 'البحث في القائمة',
+            search_placeholder: 'البحث عن الأطباق...',
+            filter_by_category: 'تصفية حسب الفئة',
+            all_categories: 'جميع الفئات',
+            appetizers: 'المقبلات',
+            main_courses: 'الأطباق الرئيسية',
+            desserts: 'الحلويات',
+            beverages: 'المشروبات',
+            filter_by_price: 'تصفية حسب السعر',
+            all_prices: 'جميع الأسعار',
+            under_15: 'أقل من 15 دولار',
+            '15_to_30': '15 - 30 دولار',
+            over_30: 'أكثر من 30 دولار',
+            sort_by: 'ترتيب حسب',
+            name: 'الاسم',
+            price_low_to_high: 'السعر: من الأقل للأعلى',
+            price_high_to_low: 'السعر: من الأعلى للأقل',
+            category: 'الفئة',
+            no_items_found: 'لم يتم العثور على عناصر تطابق معاييرك.',
+            preparation_time: 'وقت التحضير',
+            minutes: 'دقائق'
+        },
+        tr: {
+            our_menu: 'Menümüz',
+            menu_description: 'En kaliteli malzemelerle hazırlanan lezzetli yemeklerimizi keşfedin',
+            search_menu: 'Menüde Ara',
+            search_placeholder: 'Yemek ara...',
+            filter_by_category: 'Kategoriye Göre Filtrele',
+            all_categories: 'Tüm Kategoriler',
+            appetizers: 'Mezeler',
+            main_courses: 'Ana Yemekler',
+            desserts: 'Tatlılar',
+            beverages: 'İçecekler',
+            filter_by_price: 'Fiyata Göre Filtrele',
+            all_prices: 'Tüm Fiyatlar',
+            under_15: '15$ Altı',
+            '15_to_30': '15$ - 30$',
+            over_30: '30$ Üzeri',
+            sort_by: 'Sırala',
+            name: 'İsim',
+            price_low_to_high: 'Fiyat: Düşükten Yükseğe',
+            price_high_to_low: 'Fiyat: Yüksekten Düşüğe',
+            category: 'Kategori',
+            no_items_found: 'Kriterlerinize uyan öğe bulunamadı.',
+            preparation_time: 'Hazırlama süresi',
+            minutes: 'dakika'
+        }
+    };
+
+    function t(key) {
+        const lang = localStorage.getItem('lang') || 'en';
+        return (publicMenuTranslations[lang] || publicMenuTranslations.en)[key] || key;
+    }
+
+    async function loadMenu() {
+        try {
+            const response = await fetch('/api/public/menu');
+            const menuItems = await response.json();
+            allMenuItems = menuItems;
+            filteredItems = [...allMenuItems];
+            populateCategoryFilter(menuItems);
+            displayMenu(filteredItems);
+        } catch (error) {
+            console.error('Error loading menu:', error);
+            document.getElementById('menuContent').innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">' + t('no_items_found') + '</p>';
+        }
+    }
+
+    function populateCategoryFilter(menuItems) {
+        const categoryFilter = document.getElementById('categoryFilter');
+
+        // Get unique categories from menu items
+        const categories = [...new Set(menuItems.map(item => item.category))];
+
+        // Clear existing options except "All Categories"
+        categoryFilter.innerHTML = `<option value="all" data-i18n="all_categories">${t('all_categories')}</option>`;
+
+        // Add dynamic categories
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = getCategoryDisplayName(category);
+            categoryFilter.appendChild(option);
+        });
+    }
+
+    function displayMenu(items) {
+        const menuContent = document.getElementById('menuContent');
+
+        if (items.length === 0) {
+            menuContent.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">' + t('no_items_found') + '</p>';
+            return;
+        }
+
+        // Group items by category
+        const categories = {};
+        items.forEach(item => {
+            if (!categories[item.category]) {
+                categories[item.category] = [];
+            }
+            categories[item.category].push(item);
+        });
+
+        let html = '';
+        Object.keys(categories).forEach(category => {
+            const categoryItems = categories[category];
+            const categoryName = getCategoryDisplayName(category);
+
+            html += `
+                <div class="category-section">
+                    <div class="category-header">
+                        <h2>${categoryName}</h2>
+                        <p class="category-description">${getCategoryDescription(category)}</p>
+                    </div>
+                    <div class="menu-items">
+                        ${categoryItems.map(item => {
+                            // Check both manual availability and inventory availability
+                            const isAvailable = item.is_available && item.inventory_available;
+                            const outOfStockBadge = !item.inventory_available ? '<div class="out-of-stock-badge">⚠️ Out of Stock</div>' : '';
+
+                            return `
+                                <div class="menu-item ${!isAvailable ? 'unavailable' : ''}">
+                                    ${outOfStockBadge}
+                                    <div class="menu-item-image">
+                                        ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}" style="width: 100%; height: 100%; border-radius: 10px;">` : '🍽️'}
+                                    </div>
+                                    <div class="menu-item-content">
+                                        <h3 class="menu-item-title">${item.name}</h3>
+                                        <p class="menu-item-description">${item.description || 'Delicious dish prepared with fresh ingredients.'}</p>
+                                        <div class="menu-item-meta">
+                                            <div class="menu-item-price ${!isAvailable ? 'unavailable' : ''}">$${parseFloat(item.price).toFixed(2)}</div>
+                                            ${item.preparation_time ? `<div class="menu-item-time">${t('preparation_time')}: ${item.preparation_time} ${t('minutes')}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        menuContent.innerHTML = html;
+    }
+
+    function getCategoryDisplayName(category) {
+        const names = {
+            'appetizer': t('appetizers'),
+            'main': t('main_courses'),
+            'dessert': t('desserts'),
+            'drink': t('beverages')
+        };
+        return names[category] || category.charAt(0).toUpperCase() + category.slice(1);
+    }
+
+    function getCategoryDescription(category) {
+        const descriptions = {
+            'appetizer': 'Start your meal with our delicious appetizers',
+            'main': 'Savor our signature main courses',
+            'dessert': 'End your meal on a sweet note',
+            'drink': 'Refresh yourself with our beverages'
+        };
+        return descriptions[category] || '';
+    }
+
+    function filterAndSortItems() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const priceFilter = document.getElementById('priceFilter').value;
+        const sortBy = document.getElementById('sortBy').value;
+
+        filteredItems = allMenuItems.filter(item => {
+            // Search filter
+            const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                                (item.description && item.description.toLowerCase().includes(searchTerm));
+
+            // Category filter
+            const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+
+            // Price filter
+            let matchesPrice = true;
+            if (priceFilter !== 'all') {
+                const price = parseFloat(item.price);
+                switch (priceFilter) {
+                    case 'low':
+                        matchesPrice = price < 15;
+                        break;
+                    case 'medium':
+                        matchesPrice = price >= 15 && price <= 30;
+                        break;
+                    case 'high':
+                        matchesPrice = price > 30;
+                        break;
+                }
+            }
+
+            return matchesSearch && matchesCategory && matchesPrice;
+        });
+
+        // Sort items
+        filteredItems.sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'price-low':
+                    return parseFloat(a.price) - parseFloat(b.price);
+                case 'price-high':
+                    return parseFloat(b.price) - parseFloat(a.price);
+                case 'category':
+                    return a.category.localeCompare(b.category);
+                default:
+                    return 0;
+            }
+        });
+
+        displayMenu(filteredItems);
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMenu();
+
+        // Add event listeners for filters
+        document.getElementById('searchInput').addEventListener('input', filterAndSortItems);
+        document.getElementById('categoryFilter').addEventListener('change', filterAndSortItems);
+        document.getElementById('priceFilter').addEventListener('change', filterAndSortItems);
+        document.getElementById('sortBy').addEventListener('change', filterAndSortItems);
+
+        // Apply translations
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (publicMenuTranslations.en[key]) {
+                el.textContent = t(key);
+            }
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (publicMenuTranslations.en[key]) {
+                el.placeholder = t(key);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurant Management System{% endblock %}
+
+{% block extra_head %}
+    <style>
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        .card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #2d3748;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .stats {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+        .module-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .module-link {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .module-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .module-link:hover::before {
+            left: 100%;
+        }
+        .module-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .alerts-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .alerts-container {
+            display: grid;
+            gap: 10px;
+        }
+        .alert {
+            padding: 12px 15px;
+            border-radius: 5px;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .alert strong {
+            font-weight: bold;
+        }
+        .alert-dismissible {
+            position: relative;
+        }
+        .alert-dismissible .close {
+            position: absolute;
+            top: 0;
+            right: 10px;
+            color: inherit;
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .alert-dismissible .close:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 data-i18n="dashboard_title">Dashboard</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span data-i18n="welcome">Welcome</span>, <strong id="user-name">User</strong>
+                <a href="/logout" id="logoutBtn" style="background: #dc3545; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)';" data-i18n="logout">Logout</a>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3 data-i18n="total_orders_today">Total Orders Today</h3>
+                <div class="stats" id="orders-today">0</div>
+            </div>
+            <div class="card">
+                <h3 data-i18n="current_revenue">Current Revenue</h3>
+                <div class="stats" id="current-revenue">₺0.00</div>
+            </div>
+            <div class="card">
+                <h3 data-i18n="low_stock_items">Low Stock Items</h3>
+                <div class="stats" id="low-stock">0</div>
+            </div>
+            <div class="card">
+                <h3 data-i18n="active_reservations">Active Reservations</h3>
+                <div class="stats" id="active-reservations">0</div>
+            </div>
+            <div class="card">
+                <h3 data-i18n="table_utilization">Table Utilization</h3>
+                <div class="stats" id="table-utilization">0%</div>
+            </div>
+        </div>
+
+        <!-- Notification Alerts Section -->
+        <div class="alerts-section" style="margin-top: 30px;">
+            <h3 data-i18n="system_alerts">System Alerts</h3>
+            <div id="alerts-container" class="alerts-container">
+                <div class="alert alert-info" data-i18n="loading_alerts">Loading alerts...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Check if user is logged in
+    function checkAuth() {
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const user = JSON.parse(userData);
+            document.getElementById('user-name').textContent = user.first_name + ' ' + user.last_name;
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            window.location.href = '/login';
+        }
+    }
+
+    // Fetch dashboard data
+    async function fetchDashboardData() {
+        try {
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const responses = await Promise.all([
+                fetch('/api/reports/sales?start_date=' + new Date().toISOString().split('T')[0]),
+                fetch('/api/inventory/low-stock'),
+                fetch('/api/reservations'),
+                fetch('/api/tables'),
+                fetch('/api/notifications/alerts?lang=' + currentLang)
+            ]);
+
+            const [salesData, lowStockData, reservationsData, tablesData, alertsData] = await Promise.all(
+                responses.map(res => res.json())
+            );
+
+            document.getElementById('orders-today').textContent = salesData.total_orders || 0;
+            document.getElementById('current-revenue').textContent = '₺' + (salesData.total_sales || 0).toFixed(2);
+            document.getElementById('low-stock').textContent = Array.isArray(lowStockData) ? lowStockData.length : 0;
+            document.getElementById('active-reservations').textContent = Array.isArray(reservationsData) ? reservationsData.length : 0;
+
+            // Calculate and display table utilization
+            if (Array.isArray(tablesData)) {
+                const totalTables = tablesData.length;
+                const occupiedTables = tablesData.filter(table => table.status === 'occupied').length;
+                const utilizationRate = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
+                document.getElementById('table-utilization').textContent = utilizationRate + '%';
+            }
+
+            // Display alerts
+            displayAlerts(alertsData.alerts || []);
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        }
+    }
+
+    // Display alerts
+    function displayAlerts(alerts) {
+        const container = document.getElementById('alerts-container');
+
+        if (alerts.length === 0) {
+            container.innerHTML = '<div class="alert alert-success">✅ All systems operating normally</div>';
+            return;
+        }
+
+        container.innerHTML = alerts.map(alert => {
+            const alertClass = alert.severity === 'error' ? 'alert-danger' :
+                              alert.severity === 'warning' ? 'alert-warning' : 'alert-info';
+            return `
+                <div class="alert ${alertClass} alert-dismissible">
+                    <strong>${alert.title}</strong><br>
+                    ${alert.message}
+                    <button class="close" onclick="dismissAlert('${alert.item_id}', '${alert.type}')">&times;</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Dismiss alert
+    function dismissAlert(itemId, alertType) {
+        // In a real app, you'd send this to the server
+        // For now, just remove from UI
+        event.target.closest('.alert').remove();
+    }
+
+    // Dashboard translations and i18n functionality
+    (function() {
+        const dashboardTranslations = {
+            en: {
+                app_title: 'Restaurant Management System',
+                dashboard: 'Dashboard',
+                dashboard_title: 'Dashboard',
+                language: 'Language',
+                welcome: 'Welcome',
+                logout: 'Logout',
+                total_orders_today: 'Total Orders Today',
+                current_revenue: 'Current Revenue',
+                low_stock_items: 'Low Stock Items',
+                active_reservations: 'Active Reservations',
+                table_utilization: 'Table Utilization',
+                menu_management: 'Menu Management',
+                pos_orders: 'POS & Orders',
+                inventory: 'Inventory',
+                reservations: 'Reservations',
+                table_management: 'Table Management',
+                staff_management: 'Staff Management',
+                staff_schedule: 'Staff Schedule',
+                kitchen_display: 'Kitchen Display',
+                reports: 'Reports',
+                customers: 'Customers',
+                system_alerts: 'System Alerts',
+                loading_alerts: 'Loading alerts...',
+                ai_assistant: '🤖 AI Assistant'
+            },
+            ar: {
+                app_title: 'نظام إدارة المطاعم',
+                dashboard: 'لوحة التحكم',
+                dashboard_title: 'لوحة التحكم',
+                language: 'اللغة',
+                welcome: 'مرحبًا',
+                logout: 'تسجيل الخروج',
+                total_orders_today: 'إجمالي الطلبات اليوم',
+                current_revenue: 'الإيرادات الحالية',
+                low_stock_items: 'عناصر قليلة المخزون',
+                active_reservations: 'الحجوزات النشطة',
+                table_utilization: 'استخدام الطاولات',
+                table_management: 'إدارة الطاولات',
+                menu_management: 'إدارة القائمة',
+                pos_orders: 'نقطة البيع والطلبات',
+                inventory: 'المخزون',
+                reservations: 'الحجوزات',
+                staff_management: 'إدارة الموظفين',
+                staff_schedule: 'جدول الموظفين',
+                kitchen_display: 'عرض المطبخ',
+                reports: 'التقارير',
+                customers: 'العملاء',
+                system_alerts: 'تنبيهات النظام',
+                loading_alerts: 'جارٍ تحميل التنبيهات...'
+            },
+            tr: {
+                app_title: 'Restoran Yönetim Sistemi',
+                dashboard: 'Kontrol Paneli',
+                dashboard_title: 'Kontrol Paneli',
+                language: 'Dil',
+                welcome: 'Hoş geldiniz',
+                logout: 'Çıkış',
+                total_orders_today: 'Bugünkü Siparişler',
+                current_revenue: 'Güncel Gelir',
+                low_stock_items: 'Düşük Stok Kalemleri',
+                active_reservations: 'Aktif Rezervasyonlar',
+                table_utilization: 'Masa Kullanımı',
+                table_management: 'Masa Yönetimi',
+                menu_management: 'Menü Yönetimi',
+                pos_orders: 'POS ve Siparişler',
+                inventory: 'Stok',
+                reservations: 'Rezervasyonlar',
+                staff_management: 'Personel Yönetimi',
+                staff_schedule: 'Personel Çizelgesi',
+                kitchen_display: 'Mutfak Ekranı',
+                reports: 'Raporlar',
+                customers: 'Müşteriler',
+                system_alerts: 'Sistem Uyarıları',
+                loading_alerts: 'Uyarılar yükleniyor...'
+            }
+        };
+
+        window.applyDashboardTranslations = function(lang) {
+            const dict = dashboardTranslations[lang] || dashboardTranslations.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.textContent = dict[key];
+                }
+            });
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+        };
+
+        window.initDashboardI18n = function() {
+            const saved = localStorage.getItem('lang') || 'en';
+            window.applyDashboardTranslations(saved);
+
+            // Listen for global language changes
+            window.addEventListener('languageChanged', (event) => {
+                window.applyDashboardTranslations(event.detail.language);
+            });
+        };
+    })();
+
+
+
+    // Initialize dashboard
+    checkAuth();
+    window.initDashboardI18n();
+    fetchDashboardData();
+</script>
+{% endblock %}
+{% endblock %}

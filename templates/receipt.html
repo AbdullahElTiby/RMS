@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - Order {{ order.id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .receipt { max-width: 400px; margin: 0 auto; }
+        h1 { font-size: 18px; margin-bottom: 10px; }
+        .meta { font-size: 12px; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 6px; border-bottom: 1px solid #eee; text-align: left; }
+        .totals { margin-top: 10px; }
+        .totals div { display: flex; justify-content: space-between; }
+        .print-btn { margin-top: 15px; padding: 8px 12px; background: #007bff; color: white; border: none; cursor: pointer; }
+    </style>
+    <script>
+        function doPrint() { window.print(); }
+    </script>
+    </head>
+<body>
+    <div class="receipt">
+        <h1>Restaurant Receipt</h1>
+        <div class="meta">
+            <div>Order ID: {{ order.id }}</div>
+            <div>Date: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            <div>Type: {{ order.order_type }}</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td>{{ item.menu_item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ '%.2f'|format(item.price * item.quantity) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="totals">
+            <div><span>Subtotal</span><span>${{ '%.2f'|format(order.total_amount or 0) }}</span></div>
+            <div><span>Tax</span><span>${{ '%.2f'|format(order.tax_amount or 0) }}</span></div>
+            <div><strong>Total</strong><strong>${{ '%.2f'|format(order.final_amount or 0) }}</strong></div>
+            <div><span>Paid</span><span>${{ '%.2f'|format(total_paid or 0) }}</span></div>
+            <div><span>Balance</span><span>${{ '%.2f'|format(balance or 0) }}</span></div>
+        </div>
+        <h3>Payments</h3>
+        <table>
+            <thead>
+                <tr><th>Method</th><th>Amount</th><th>Time</th></tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td>{{ p.payment_method }}</td>
+                    <td>${{ '%.2f'|format(p.amount) }}</td>
+                    <td>{{ p.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button class="print-btn" onclick="doPrint()">Print</button>
+    </div>
+</body>
+</html>
+
+

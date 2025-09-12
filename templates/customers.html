@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .customers-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .customers-table th, .customers-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .customers-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .customers-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .section { margin-top: 30px; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .notes {
+            margin-top: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .note-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .note-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .meta {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="header">
+            <h1 data-i18n="customers">Customers</h1>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+                <button class="btn btn-primary" onclick="openAddCustomer()" data-i18n="add_customer">Add Customer</button>
+            </div>
+        </div>
+
+        <table class="customers-table" id="customersTable">
+            <thead>
+                <tr>
+                    <th data-i18n="name">Name</th>
+                    <th data-i18n="email">Email</th>
+                    <th data-i18n="phone">Phone</th>
+                    <th data-i18n="loyalty_points">Loyalty Points</th>
+                    <th data-i18n="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div id="loading" style="text-align:center; padding: 30px;">Loading customers...</div>
+    </div>
+
+    <!-- Loyalty Modal -->
+    <!-- Add Customer Modal -->
+    <div id="addCustomerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Customer</h2>
+                <button class="close-btn" onclick="closeAddCustomer()">&times;</button>
+            </div>
+            <form id="addCustomerForm">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="custFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="custLastName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="custEmail">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="custPhone">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddCustomer()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="loyaltyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="adjust_loyalty">Adjust Loyalty</h2>
+                <button class="close-btn" onclick="closeLoyalty()">&times;</button>
+            </div>
+            <form id="loyaltyForm">
+                <input type="hidden" id="loyaltyCustomerId">
+                <div class="form-group">
+                    <label data-i18n="action">Action</label>
+                    <select id="loyaltyAction">
+                        <option value="accrue" data-i18n="accrue">Accrue</option>
+                        <option value="redeem" data-i18n="redeem">Redeem</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="points">Points</label>
+                    <input type="number" id="loyaltyPoints" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLoyalty()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="crm_notes">CRM Notes</h2>
+                <button class="close-btn" onclick="closeNotes()">&times;</button>
+            </div>
+            <div id="notesContainer" class="notes"></div>
+            <form id="noteForm" class="section">
+                <input type="hidden" id="notesCustomerId">
+                <div class="form-group">
+                    <label data-i18n="add_note">Add Note</label>
+                    <textarea id="noteText" rows="3" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNotes()" data-i18n="close">Close</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="add_note">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function checkAuth() {
+    if (!localStorage.getItem('user')) {
+        window.location.href = '/login';
+        return false;
+    }
+    return true;
+}
+
+async function loadCustomers() {
+    if (!await checkAuth()) return;
+    try {
+        const res = await fetch('/api/customers');
+        const customers = await res.json();
+        renderCustomers(customers);
+    } catch (e) {
+        console.error('Failed to load customers', e);
+        const lang = localStorage.getItem('lang') || 'en';
+        const dict = translations[lang] || translations.en;
+        document.getElementById('loading').textContent = dict.failed_to_load_customers || 'Failed to load customers.';
+    }
+}
+
+function renderCustomers(customers) {
+    const tbody = document.querySelector('#customersTable tbody');
+    const loading = document.getElementById('loading');
+    tbody.innerHTML = '';
+    if (!customers.length) {
+        const lang = localStorage.getItem('lang') || 'en';
+        const dict = translations[lang] || translations.en;
+        loading.textContent = dict.no_customers_found || 'No customers found.';
+        return;
+    }
+    customers.forEach(c => {
+        const row = `
+            <tr>
+                <td>${c.first_name || ''} ${c.last_name || ''}</td>
+                <td>${c.email || ''}</td>
+                <td>${c.phone || ''}</td>
+                <td>${c.loyalty_points || 0}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="openLoyalty(${c.id}, ${c.loyalty_points || 0})">${t('adjust_loyalty')}</button>
+                    <button class="btn btn-secondary" onclick="openNotes(${c.id})">${t('crm_notes')}</button>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+    loading.style.display = 'none';
+}
+
+function openLoyalty(customerId, currentPoints) {
+    document.getElementById('loyaltyCustomerId').value = customerId;
+    document.getElementById('loyaltyPoints').value = 0;
+    document.getElementById('loyaltyModal').style.display = 'block';
+}
+function closeLoyalty() {
+    document.getElementById('loyaltyModal').style.display = 'none';
+}
+
+document.getElementById('loyaltyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('loyaltyCustomerId').value;
+    const action = document.getElementById('loyaltyAction').value;
+    const points = parseInt(document.getElementById('loyaltyPoints').value);
+    try {
+        const res = await fetch(`/api/customers/${id}/loyalty`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, points })
+        });
+        if (res.ok) {
+            closeLoyalty();
+            loadCustomers();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.message || 'Failed to adjust loyalty');
+        }
+    } catch (err) {
+        console.error('Loyalty error', err);
+    }
+});
+
+async function openNotes(customerId) {
+    document.getElementById('notesCustomerId').value = customerId;
+    document.getElementById('notesContainer').innerHTML = 'Loading...';
+    document.getElementById('notesModal').style.display = 'block';
+    try {
+        const res = await fetch(`/api/customers/${customerId}/crm-notes`);
+        const notes = await res.json();
+        const container = document.getElementById('notesContainer');
+        container.innerHTML = notes.map(n => `
+            <div class="note-item">
+                <div>${n.note}</div>
+                <div class="meta">${new Date(n.created_at).toLocaleString()}${n.created_by_user_id ? ` • User ${n.created_by_user_id}` : ''}</div>
+            </div>
+        `).join('');
+        if (!notes.length) container.innerHTML = '<div class="meta">No notes yet.</div>';
+    } catch (err) {
+        console.error('Load notes error', err);
+        const lang = localStorage.getItem('lang') || 'en';
+        const dict = translations[lang] || translations.en;
+        document.getElementById('notesContainer').textContent = dict.failed_to_load_notes || 'Failed to load notes';
+    }
+}
+function closeNotes() {
+    document.getElementById('notesModal').style.display = 'none';
+}
+
+document.getElementById('noteForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('notesCustomerId').value;
+    const note = document.getElementById('noteText').value.trim();
+    if (!note) return;
+    try {
+        const res = await fetch(`/api/customers/${id}/crm-notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note })
+        });
+        if (res.ok) {
+            document.getElementById('noteText').value = '';
+            openNotes(id);
+        } else {
+            alert('Failed to add note');
+        }
+    } catch (err) {
+        console.error('Add note error', err);
+    }
+});
+
+// i18n
+const translations = {
+    en: { customers: 'Customers', language: 'Language', back_to_dashboard: 'Back to Dashboard', add_customer: 'Add Customer', name: 'Name', email: 'Email', phone: 'Phone', loyalty_points: 'Loyalty Points', actions: 'Actions', adjust_loyalty: 'Adjust Loyalty', action: 'Action', accrue: 'Accrue', redeem: 'Redeem', points: 'Points', cancel: 'Cancel', save: 'Save', crm_notes: 'CRM Notes', add_note: 'Add Note', close: 'Close', first_name: 'First Name', last_name: 'Last Name', failed_to_load_customers: 'Failed to load customers.', no_customers_found: 'No customers found.', failed_to_load_notes: 'Failed to load notes' },
+    ar: { customers: 'العملاء', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', add_customer: 'إضافة عميل', name: 'الاسم', email: 'البريد الإلكتروني', phone: 'الهاتف', loyalty_points: 'نقاط الولاء', actions: 'الإجراءات', adjust_loyalty: 'تعديل النقاط', action: 'الإجراء', accrue: 'إضافة', redeem: 'استبدال', points: 'النقاط', cancel: 'إلغاء', save: 'حفظ', crm_notes: 'ملاحظات CRM', add_note: 'إضافة ملاحظة', close: 'إغلاق', first_name: 'الاسم الأول', last_name: 'اسم العائلة', failed_to_load_customers: 'فشل تحميل العملاء.', no_customers_found: 'لم يتم العثور على عملاء.', failed_to_load_notes: 'فشل تحميل الملاحظات' },
+    tr: { customers: 'Müşteriler', language: 'Dil', back_to_dashboard: 'Panele Dön', add_customer: 'Müşteri Ekle', name: 'Ad Soyad', email: 'E-posta', phone: 'Telefon', loyalty_points: 'Sadakat Puanları', actions: 'İşlemler', adjust_loyalty: 'Puan Düzenle', action: 'İşlem', accrue: 'Kazandır', redeem: 'Kullan', points: 'Puan', cancel: 'İptal', save: 'Kaydet', crm_notes: 'CRM Notları', add_note: 'Not Ekle', close: 'Kapat', first_name: 'Ad', last_name: 'Soyad', failed_to_load_customers: 'Müşteriler yüklenemedi.', no_customers_found: 'Müşteri bulunamadı.', failed_to_load_notes: 'Notlar yüklenemedi' }
+};
+function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
+function applyTranslations(lang) {
+    const dict = translations[lang] || translations.en;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+    });
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+    document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+}
+function initI18n() {
+    const saved = localStorage.getItem('lang') || 'en';
+    applyTranslations(saved);
+
+    // Listen for global language changes
+    window.addEventListener('languageChanged', (event) => {
+        applyTranslations(event.detail.language);
+        loadCustomers(); // Reload customers when language changes
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => { initI18n(); loadCustomers(); });
+
+function openAddCustomer() {
+    document.getElementById('addCustomerModal').style.display = 'block';
+}
+function closeAddCustomer() {
+    document.getElementById('addCustomerModal').style.display = 'none';
+    document.getElementById('addCustomerForm').reset();
+}
+
+document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const payload = {
+        first_name: document.getElementById('custFirstName').value,
+        last_name: document.getElementById('custLastName').value,
+        email: document.getElementById('custEmail').value || null,
+        phone: document.getElementById('custPhone').value || null
+    };
+    try {
+        const res = await fetch('/api/customers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            closeAddCustomer();
+            loadCustomers();
+        } else {
+            alert('Failed to create customer');
+        }
+    } catch (err) {
+        console.error('Create customer error', err);
+    }
+});
+</script>
+{% endblock %}

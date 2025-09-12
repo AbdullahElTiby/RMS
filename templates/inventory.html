@@ -1,0 +1,728 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Management - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .inventory-table th, .inventory-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .inventory-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .inventory-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        .status-adequate { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .status-low { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .transactions-section {
+            margin-top: 50px;
+        }
+        .transactions-section h2 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .restock-info {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .restock-info p {
+            margin: 5px 0;
+            color: #1e40af;
+            font-weight: 500;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="header">
+        <h1 data-i18n="inventory">Inventory</h1>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="openAddModal()" data-i18n="add_ingredient">Add New Ingredient</button>
+        </div>
+    </div>
+    <table class="inventory-table" id="inventoryTable">
+        <thead>
+            <tr>
+                <th data-i18n="ingredient">Ingredient</th>
+                <th data-i18n="current_stock">Current Stock</th>
+                <th data-i18n="unit">Unit</th>
+                <th data-i18n="min_stock">Min. Stock</th>
+                <th data-i18n="cost_per_unit">Cost per Unit</th>
+                <th data-i18n="status">Status</th>
+                <th data-i18n="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Inventory items will be loaded here -->
+        </tbody>
+    </table>
+    <div id="loading" style="text-align: center; padding: 40px;">Loading inventory...</div>
+
+    <!-- Inventory Transactions Section -->
+    <div class="transactions-section">
+        <h2 data-i18n="inventory_transactions">Inventory Transactions</h2>
+        <table class="inventory-table" id="transactionsTable">
+            <thead>
+                <tr>
+                    <th data-i18n="ingredient">Ingredient</th>
+                    <th data-i18n="transaction_type">Type</th>
+                    <th data-i18n="quantity">Quantity</th>
+                    <th data-i18n="cost">Cost</th>
+                    <th data-i18n="transaction_date">Date</th>
+                    <th data-i18n="notes">Notes</th>
+                    <th data-i18n="related_order">Order ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Transaction items will be loaded here -->
+            </tbody>
+        </table>
+        <div id="transactionsLoading" style="text-align: center; padding: 40px;">Loading transactions...</div>
+    </div>
+</div>
+
+<!-- Add/Edit Ingredient Modal -->
+<div id="ingredientModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle" data-i18n="add_ingredient">Add New Ingredient</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="ingredientForm">
+            <input type="hidden" id="ingredientId">
+            <div class="form-group">
+                <label for="name" data-i18n="ingredient_name">Ingredient Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="unit" data-i18n="unit_label">Unit (e.g., kg, L, pieces)</label>
+                <input type="text" id="unit" required>
+            </div>
+            <div class="form-group">
+                <label for="minStock" data-i18n="min_stock_level">Minimum Stock Level</label>
+                <input type="number" id="minStock" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="costPerUnit" data-i18n="cost_per_unit">Cost per Unit (₺)</label>
+                <input type="number" id="costPerUnit" step="0.01" min="0">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" data-i18n="save_ingredient">Save Ingredient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Restock Modal -->
+<div id="restockModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 data-i18n="restock_ingredient">Restock Ingredient</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="restockForm">
+            <input type="hidden" id="restockIngredientId">
+            <p><span data-i18n="restocking">Restocking:</span> <strong id="restockItemName"></strong></p>
+            <p><span data-i18n="current_stock">Current Stock:</span> <span id="restockCurrentStock"></span></p>
+            <p><span data-i18n="cost_per_unit">Cost per Unit:</span> <span id="restockCostPerUnit"></span></p>
+            <div class="form-group">
+                <label for="quantity" data-i18n="quantity_to_add">Quantity to Add</label>
+                <input type="number" id="quantity" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <p><strong data-i18n="total_cost">Total Cost:</strong> ₺<span id="totalCost">0.00</span></p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" data-i18n="add_stock">Add Stock</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function checkAuth() {
+        if (!localStorage.getItem('user')) {
+            window.location.href = '/login';
+            return false;
+        }
+        return true;
+    }
+
+    async function loadInventory() {
+        if (!await checkAuth()) return;
+        try {
+            const response = await fetch('/api/inventory');
+            const inventory = await response.json();
+            displayInventory(inventory);
+            loadTransactions(); // Load transactions after inventory
+        } catch (error) {
+            console.error('Error loading inventory:', error);
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            document.getElementById('loading').textContent = dict.failed_to_load_inventory || 'Failed to load inventory.';
+        }
+    }
+
+    async function loadTransactions() {
+        try {
+            const response = await fetch('/api/inventory/transactions');
+            const transactions = await response.json();
+            displayTransactions(transactions);
+        } catch (error) {
+            console.error('Error loading transactions:', error);
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            document.getElementById('transactionsLoading').textContent = dict.failed_to_load_transactions || 'Failed to load transactions.';
+        }
+    }
+
+    function displayInventory(inventory) {
+        const tableBody = document.querySelector('#inventoryTable tbody');
+        const loading = document.getElementById('loading');
+        tableBody.innerHTML = '';
+        if (inventory.length === 0) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            loading.textContent = dict.no_ingredients_found || 'No ingredients found.';
+            return;
+        }
+        inventory.forEach(item => {
+            const costDisplay = item.cost_per_unit ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}` : '-';
+            const row = `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.current_stock}</td>
+                    <td>${item.unit}</td>
+                    <td>${item.min_stock}</td>
+                    <td>${costDisplay}</td>
+                    <td><span class="status-badge status-${item.status}">${t('status_' + item.status) || item.status}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="openRestockModal(${item.id}, '${item.name}', ${item.current_stock})">${t('restock')}</button>
+                        <button class="btn btn-warning" onclick="openSpoilModal(${item.id}, '${item.name}', ${item.current_stock})">${t('spoil')}</button>
+                        <button class="btn btn-secondary" onclick="openEditModal(${item.id})">${t('edit')}</button>
+                        <button class="btn btn-secondary" onclick="deleteIngredient(${item.id})">${t('remove')}</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+        loading.style.display = 'none';
+    }
+
+    function displayTransactions(transactions) {
+        const tableBody = document.querySelector('#transactionsTable tbody');
+        const loading = document.getElementById('transactionsLoading');
+        tableBody.innerHTML = '';
+        if (transactions.length === 0) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+            loading.textContent = dict.no_transactions_found || 'No transactions found.';
+            return;
+        }
+        transactions.forEach(transaction => {
+            const date = new Date(transaction.transaction_date).toLocaleString();
+            const orderId = transaction.related_order_id ? transaction.related_order_id : '-';
+            const costDisplay = transaction.total_cost ? `₺${parseFloat(transaction.total_cost).toFixed(2)}` : '-';
+            const row = `
+                <tr>
+                    <td>${transaction.ingredient_name}</td>
+                    <td>${t('transaction_type_' + transaction.transaction_type) || transaction.transaction_type}</td>
+                    <td>${transaction.quantity}</td>
+                    <td>${costDisplay}</td>
+                    <td>${date}</td>
+                    <td>${transaction.notes || '-'}</td>
+                    <td>${orderId}</td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+        loading.style.display = 'none';
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = t('add_ingredient');
+        document.getElementById('ingredientForm').reset();
+        document.getElementById('ingredientId').value = '';
+        document.getElementById('ingredientModal').style.display = 'block';
+    }
+
+    async function openEditModal(id) {
+        // In a real app, you would fetch the specific ingredient details
+        // For simplicity, we find it from the already loaded data, but a fetch is better
+        const response = await fetch('/api/inventory'); // Re-fetch to ensure data is current
+        const inventory = await response.json();
+        const item = inventory.find(i => i.id === id);
+
+        document.getElementById('modalTitle').textContent = t('edit_ingredient');
+        document.getElementById('ingredientId').value = item.id;
+        document.getElementById('name').value = item.name;
+        document.getElementById('unit').value = item.unit;
+        document.getElementById('minStock').value = item.min_stock;
+        document.getElementById('costPerUnit').value = item.cost_per_unit || '';
+        document.getElementById('ingredientModal').style.display = 'block';
+    }
+
+    async function openRestockModal(id, name, currentStock) {
+        // Fetch the ingredient details to get the cost
+        const response = await fetch('/api/inventory');
+        const inventory = await response.json();
+        const item = inventory.find(i => i.id === id);
+
+        document.getElementById('restockIngredientId').value = id;
+        document.getElementById('restockItemName').textContent = name;
+        document.getElementById('restockCurrentStock').textContent = currentStock;
+        document.getElementById('restockCostPerUnit').textContent = item.cost_per_unit ? `₺${parseFloat(item.cost_per_unit).toFixed(2)}` : '-';
+        document.getElementById('totalCost').textContent = '0.00';
+        document.getElementById('restockForm').reset();
+        document.getElementById('restockModal').style.display = 'block';
+
+        // Store cost for calculation
+        document.getElementById('restockModal').dataset.costPerUnit = item.cost_per_unit || 0;
+    }
+
+    function closeModal() {
+        document.getElementById('ingredientModal').style.display = 'none';
+        document.getElementById('restockModal').style.display = 'none';
+    }
+
+    // Handle Add/Edit Ingredient Form
+    document.getElementById('ingredientForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('ingredientId').value;
+        const data = {
+            name: document.getElementById('name').value,
+            unit: document.getElementById('unit').value,
+            min_stock: parseFloat(document.getElementById('minStock').value),
+            cost_per_unit: document.getElementById('costPerUnit').value ? parseFloat(document.getElementById('costPerUnit').value) : null
+        };
+
+        const url = id ? `/api/inventory/${id}` : '/api/inventory';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                closeModal();
+                loadInventory();
+            } else {
+                alert('Failed to save ingredient.');
+            }
+        } catch (error) {
+            console.error('Error saving ingredient:', error);
+        }
+    });
+
+    // Handle Restock Form
+    document.getElementById('restockForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('restockIngredientId').value;
+        const quantity = parseFloat(document.getElementById('quantity').value);
+
+        try {
+            const response = await fetch(`/api/inventory/restock`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ingredient_id: id, quantity: quantity })
+            });
+            if (response.ok) {
+                closeModal();
+                loadInventory();
+            } else {
+                alert('Failed to restock ingredient.');
+            }
+        } catch (error) {
+            console.error('Error restocking ingredient:', error);
+        }
+    });
+
+    async function deleteIngredient(id) {
+        if (!confirm(t('confirm_remove_ingredient'))) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/inventory/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                loadInventory();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.message || 'Failed to remove ingredient.');
+            }
+        } catch (error) {
+            console.error('Error deleting ingredient:', error);
+        }
+    }
+
+    // Initial Load
+    // i18n
+    const translations = {
+        en: { inventory: 'Inventory', language: 'Language', back_to_dashboard: 'Back to Dashboard', add_ingredient: 'Add New Ingredient', ingredient: 'Ingredient', current_stock: 'Current Stock', unit: 'Unit', min_stock: 'Min. Stock', status: 'Status', actions: 'Actions', ingredient_name: 'Ingredient Name', unit_label: 'Unit (e.g., kg, L, pieces)', min_stock_level: 'Minimum Stock Level', cost_per_unit: 'Cost per Unit (₺)', total_cost: 'Total Cost:', cancel: 'Cancel', save_ingredient: 'Save Ingredient', restock_ingredient: 'Restock Ingredient', restocking: 'Restocking:', quantity_to_add: 'Quantity to Add', add_stock: 'Add Stock', restock: 'Restock', edit: 'Edit', remove: 'Remove', edit_ingredient: 'Edit Ingredient', confirm_remove_ingredient: 'Are you sure you want to remove this ingredient?', inventory_transactions: 'Inventory Transactions', transaction_type: 'Type', quantity: 'Quantity', cost: 'Cost', transaction_date: 'Date', notes: 'Notes', related_order: 'Order ID', failed_to_load_inventory: 'Failed to load inventory.', failed_to_load_transactions: 'Failed to load transactions.', no_ingredients_found: 'No ingredients found.', no_transactions_found: 'No transactions found.', status_low: 'Low', status_adequate: 'Adequate', status_critical: 'Critical', transaction_type_waste: 'Waste', transaction_type_purchase: 'Purchase', transaction_type_usage: 'Usage', transaction_type_adjustment: 'Adjustment', spoil: 'Spoil', spoil_ingredient: 'Spoil Ingredient', spoil_quantity: 'Quantity to Spoil', spoil_reason: 'Reason for Spoilage', spoil_full_stock: 'Spoil Full Stock', spoil_partial_stock: 'Spoil Partial Stock', spoil_all_stock: 'Spoil All Stock', confirm_spoil: 'Are you sure you want to spoil this ingredient?', spoil_success: 'Ingredient spoiled successfully', spoil_error: 'Error spoiling ingredient' },
+        ar: { inventory: 'المخزون', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', add_ingredient: 'إضافة مكوّن جديد', ingredient: 'المكوّن', current_stock: 'المخزون الحالي', unit: 'الوحدة', min_stock: 'الحد الأدنى', status: 'الحالة', actions: 'الإجراءات', ingredient_name: 'اسم المكوّن', unit_label: 'الوحدة (مثل كجم، لتر، قطع)', min_stock_level: 'الحد الأدنى للمخزون', cost_per_unit: 'التكلفة للوحدة (₺)', total_cost: 'التكلفة الإجمالية:', cancel: 'إلغاء', save_ingredient: 'حفظ المكوّن', restock_ingredient: 'تعبئة المكوّن', restocking: 'جاري التعبئة:', quantity_to_add: 'الكمية المراد إضافتها', add_stock: 'إضافة للمخزون', restock: 'تعبئة', edit: 'تعديل', remove: 'إزالة', edit_ingredient: 'تعديل المكوّن', confirm_remove_ingredient: 'هل أنت متأكد من إزالة هذا المكوّن؟', inventory_transactions: 'حركات المخزون', transaction_type: 'النوع', quantity: 'الكمية', cost: 'التكلفة', transaction_date: 'التاريخ', notes: 'الملاحظات', related_order: 'رقم الطلب', failed_to_load_inventory: 'فشل تحميل المخزون.', failed_to_load_transactions: 'فشل تحميل الحركات.', no_ingredients_found: 'لم يتم العثور على مكونات.', no_transactions_found: 'لم يتم العثور على حركات.', status_low: 'منخفض', status_adequate: 'كافي', status_critical: 'حرج', transaction_type_waste: 'نفايات', transaction_type_purchase: 'شراء', transaction_type_usage: 'استخدام', transaction_type_adjustment: 'تعديل', spoil: 'إفساد', spoil_ingredient: 'إفساد المكوّن', spoil_quantity: 'الكمية المراد إفسادها', spoil_reason: 'سبب الإفساد', spoil_full_stock: 'إفساد المخزون بالكامل', spoil_partial_stock: 'إفساد جزء من المخزون', spoil_all_stock: 'إفساد كل المخزون', confirm_spoil: 'هل أنت متأكد من إفساد هذا المكوّن؟', spoil_success: 'تم إفساد المكوّن بنجاح', spoil_error: 'خطأ في إفساد المكوّن' },
+        tr: { inventory: 'Stok', language: 'Dil', back_to_dashboard: 'Panele Dön', add_ingredient: 'Yeni Malzeme Ekle', ingredient: 'Malzeme', current_stock: 'Mevcut Stok', unit: 'Birim', min_stock: 'Asgari Stok', status: 'Durum', actions: 'İşlemler', ingredient_name: 'Malzeme Adı', unit_label: 'Birim (örn. kg, L, adet)', min_stock_level: 'Asgari Stok Seviyesi', cost_per_unit: 'Birim Maliyet (₺)', total_cost: 'Toplam Maliyet:', cancel: 'İptal', save_ingredient: 'Malzemeyi Kaydet', restock_ingredient: 'Malzeme Yenile', restocking: 'Yenileniyor:', quantity_to_add: 'Eklenecek Miktar', add_stock: 'Stok Ekle', restock: 'Yenile', edit: 'Düzenle', remove: 'Kaldır', edit_ingredient: 'Malzemeyi Düzenle', confirm_remove_ingredient: 'Bu malzemeyi kaldırmak istediğinizden emin misiniz?', inventory_transactions: 'Stok Hareketleri', transaction_type: 'Tür', quantity: 'Miktar', cost: 'Maliyet', transaction_date: 'Tarih', notes: 'Notlar', related_order: 'Sipariş ID', failed_to_load_inventory: 'Stok yüklenemedi.', failed_to_load_transactions: 'Hareketler yüklenemedi.', no_ingredients_found: 'Malzeme bulunamadı.', no_transactions_found: 'Hareket bulunamadı.', status_low: 'Düşük', status_adequate: 'Yeterli', status_critical: 'Kritik', transaction_type_waste: 'İsraf', transaction_type_purchase: 'Satın Alma', transaction_type_usage: 'Kullanım', transaction_type_adjustment: 'Düzenleme', spoil: 'Boz', spoil_ingredient: 'Malzemeyi Boz', spoil_quantity: 'Bozulacak Miktar', spoil_reason: 'Bozulma Nedeni', spoil_full_stock: 'Tüm Stoğu Boz', spoil_partial_stock: 'Stoğun Bir Kısmını Boz', spoil_all_stock: 'Tüm Stoğu Boz', confirm_spoil: 'Bu malzemeyi bozmak istediğinizden emin misiniz?', spoil_success: 'Malzeme başarıyla bozuldu', spoil_error: 'Malzeme bozulurken hata oluştu' }
+    };
+    function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
+    function applyTranslations(lang) {
+        const dict = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) el.textContent = dict[key];
+        });
+        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+    }
+    function initI18n() {
+        const saved = localStorage.getItem('lang') || 'en';
+        applyTranslations(saved);
+
+        // Listen for global language changes
+        window.addEventListener('languageChanged', (event) => {
+            applyTranslations(event.detail.language);
+            loadInventory(); // Reload inventory when language changes
+        });
+    }
+
+    // Spoil Modal Functions
+    function openSpoilModal(id, name, currentStock) {
+        document.getElementById('spoilIngredientId').value = id;
+        document.getElementById('spoilItemName').textContent = name;
+        document.getElementById('spoilCurrentStock').textContent = currentStock;
+        document.getElementById('spoilQuantity').value = '';
+        document.getElementById('spoilReason').value = '';
+        document.getElementById('spoilForm').reset();
+        document.getElementById('spoilModal').style.display = 'block';
+    }
+
+    function closeSpoilModal() {
+        document.getElementById('spoilModal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initI18n();
+        loadInventory();
+
+        // Calculate total cost when quantity changes
+        const quantityInput = document.getElementById('quantity');
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                const quantity = parseFloat(this.value) || 0;
+                const costPerUnit = parseFloat(document.getElementById('restockModal').dataset.costPerUnit) || 0;
+                const totalCost = quantity * costPerUnit;
+                document.getElementById('totalCost').textContent = totalCost.toFixed(2);
+            });
+        }
+
+        // Handle Spoil All Stock Checkbox
+        const spoilAllStockCheckbox = document.getElementById('spoilAllStock');
+        const spoilQuantityInput = document.getElementById('spoilQuantity');
+        if (spoilAllStockCheckbox && spoilQuantityInput) {
+            spoilAllStockCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Get current stock from the modal
+                    const currentStock = parseFloat(document.getElementById('spoilCurrentStock').textContent) || 0;
+                    spoilQuantityInput.value = currentStock;
+                } else {
+                    spoilQuantityInput.value = '';
+                }
+            });
+        }
+
+        // Handle Spoil Form
+        const spoilForm = document.getElementById('spoilForm');
+        if (spoilForm) {
+            spoilForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const id = document.getElementById('spoilIngredientId').value;
+                const quantity = parseFloat(document.getElementById('spoilQuantity').value);
+                const reason = document.getElementById('spoilReason').value || t('spoil_reason');
+
+                if (!quantity || quantity <= 0) {
+                    alert('Please enter a valid quantity to spoil.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/inventory/${id}/spoil`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantity: quantity, reason: reason })
+                    });
+                    if (response.ok) {
+                        closeSpoilModal();
+                        loadInventory();
+                        alert(t('spoil_success'));
+                    } else {
+                        const errorData = await response.json();
+                        alert(errorData.message || t('spoil_error'));
+                    }
+                } catch (error) {
+                    console.error('Error spoiling ingredient:', error);
+                    alert(t('spoil_error'));
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Spoil Modal -->
+<div id="spoilModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 data-i18n="spoil_ingredient">Spoil Ingredient</h2>
+            <button class="close-btn" onclick="closeSpoilModal()">&times;</button>
+        </div>
+
+        <form id="spoilForm">
+            <input type="hidden" id="spoilIngredientId">
+            
+            <div class="form-group">
+                <label data-i18n="ingredient">Ingredient</label>
+                <div id="spoilItemName" style="font-weight: bold;"></div>
+                <div><span data-i18n="current_stock">Current Stock</span>: <span id="spoilCurrentStock"></span></div>
+            </div>
+
+            <div class="form-group">
+                <label for="spoilQuantity" data-i18n="spoil_quantity">Quantity to Spoil</label>
+                <input type="number" id="spoilQuantity" step="0.01" min="0.01" required>
+                <div style="margin-top: 8px;">
+                    <label style="display: inline-flex; align-items: center; cursor: pointer; font-size: 14px; color: #374151;">
+                        <input type="checkbox" id="spoilAllStock" style="margin-right: 8px;">
+                        <span data-i18n="spoil_all_stock">Spoil All Stock</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="spoilReason" data-i18n="spoil_reason">Reason for Spoilage</label>
+                <textarea id="spoilReason" placeholder="e.g., Expired, Damaged, Contaminated"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeSpoilModal()" data-i18n="cancel">Cancel</button>
+                <button type="submit" class="btn btn-warning" data-i18n="spoil">Spoil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

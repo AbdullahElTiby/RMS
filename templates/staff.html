@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Management - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(220, 53, 69, 0.4);
+        }
+        .staff-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .staff-table th, .staff-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .staff-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .staff-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .role-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        .role-admin { background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); }
+        .role-manager { background: linear-gradient(135deg, #fd7e14 0%, #e8680f 100%); }
+        .role-kitchen { background: linear-gradient(135deg, #20c997 0%, #17a67a 100%); }
+        .role-service { background: linear-gradient(135deg, #0dcaf0 0%, #0bb5d7 100%); }
+        .role-delivery { background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); }
+        .role-support { background: linear-gradient(135deg, #6c757d 0%, #545b62 100%); }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 16px;
+        }
+        .status-active {
+            color: #10b981;
+            font-weight: 700;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .status-inactive {
+            color: #ef4444;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="header">
+        <h1 data-i18n="staff_management">Staff Management</h1>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="openAddStaffModal()" data-i18n="add_staff">Add New Staff</button>
+        </div>
+    </div>
+
+    <table class="staff-table" id="staffTable">
+        <thead>
+            <tr>
+                <th data-i18n="name">Name</th>
+                <th data-i18n="username">Username</th>
+                <th data-i18n="role">Role</th>
+                <th data-i18n="email">Email</th>
+                <th data-i18n="phone">Phone</th>
+                <th data-i18n="status">Status</th>
+                <th data-i18n="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Staff members will be loaded here -->
+        </tbody>
+    </table>
+    <div id="loading" style="text-align: center; padding: 40px;" data-i18n="loading_staff">Loading staff members...</div>
+</div>
+
+    <!-- Add/Edit Staff Modal -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-i18n="add_staff">Add New Staff</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="staffForm">
+                <input type="hidden" id="staffId">
+                <div class="form-group">
+                    <label for="firstName" data-i18n="first_name">First Name</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName" data-i18n="last_name">Last Name</label>
+                    <input type="text" id="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="username" data-i18n="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" data-i18n="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone" data-i18n="phone">Phone</label>
+                    <input type="tel" id="phone">
+                </div>
+                <div class="form-group">
+                    <label for="role" data-i18n="role">Role</label>
+                    <select id="role" required>
+                        <option value="">${t('select_role')}</option>
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="head_chef">Head Chef</option>
+                        <option value="chef">Chef</option>
+                        <option value="sous_chef">Sous Chef</option>
+                        <option value="bartender">Bartender</option>
+                        <option value="waiter">Waiter</option>
+                        <option value="cashier">Cashier</option>
+                        <option value="host">Host</option>
+                        <option value="delivery_driver">Delivery Driver</option>
+                        <option value="cleaner">Cleaner</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password" data-i18n="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isActive" checked>
+                        <span data-i18n="active_status">Active Status</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save_staff">Save Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    async function checkAuth() {
+        if (!localStorage.getItem('user')) {
+            window.location.href = '/login';
+            return false;
+        }
+        return true;
+    }
+
+    async function loadStaff() {
+        if (!await checkAuth()) return;
+        
+        try {
+            const response = await fetch('/api/staff');
+            const staff = await response.json();
+            displayStaff(staff);
+        } catch (error) {
+            console.error('Error loading staff:', error);
+            document.getElementById('loading').textContent = t('failed_to_load');
+        }
+    }
+
+    function displayStaff(staff) {
+        const tableBody = document.querySelector('#staffTable tbody');
+        const loading = document.getElementById('loading');
+        tableBody.innerHTML = '';
+        
+        if (staff.length === 0) {
+            loading.textContent = t('no_staff');
+            return;
+        }
+        
+        staff.forEach(member => {
+            const roleClass = getRoleClass(member.role);
+            const row = `
+                <tr>
+                    <td>${member.first_name} ${member.last_name}</td>
+                    <td>${member.username}</td>
+                    <td><span class="role-badge ${roleClass}">${member.role.replace('_', ' ')}</span></td>
+                    <td>${member.email}</td>
+                    <td>${member.phone || 'N/A'}</td>
+                    <td class="${member.is_active ? 'status-active' : 'status-inactive'}">
+                        ${member.is_active ? t('active') : t('inactive')}
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="editStaff(${member.id})">${t('edit')}</button>
+                        <button class="btn ${member.is_active ? 'btn-danger' : 'btn-primary'}" onclick="toggleStaffStatus(${member.id}, ${!member.is_active})">
+                            ${member.is_active ? t('deactivate') : t('activate')}
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+        loading.style.display = 'none';
+    }
+
+    function getRoleClass(role) {
+        const roleClasses = {
+            'admin': 'role-admin',
+            'manager': 'role-manager',
+            'head_chef': 'role-kitchen',
+            'chef': 'role-kitchen',
+            'sous_chef': 'role-kitchen',
+            'bartender': 'role-service',
+            'waiter': 'role-service',
+            'cashier': 'role-service',
+            'host': 'role-service',
+            'delivery_driver': 'role-delivery',
+            'cleaner': 'role-support'
+        };
+        return roleClasses[role] || 'role-support';
+    }
+
+    function openAddStaffModal() {
+        document.getElementById('modalTitle').textContent = t('add_staff');
+        document.getElementById('staffForm').reset();
+        document.getElementById('staffId').value = '';
+        document.getElementById('password').required = true;
+        document.getElementById('staffModal').style.display = 'block';
+    }
+
+    async function editStaff(id) {
+        try {
+            const response = await fetch(`/api/staff/${id}`);
+            const staff = await response.json();
+            
+            document.getElementById('modalTitle').textContent = t('edit_staff');
+            document.getElementById('staffId').value = staff.id;
+            document.getElementById('firstName').value = staff.first_name;
+            document.getElementById('lastName').value = staff.last_name;
+            document.getElementById('username').value = staff.username;
+            document.getElementById('email').value = staff.email;
+            document.getElementById('phone').value = staff.phone || '';
+            document.getElementById('role').value = staff.role;
+            document.getElementById('isActive').checked = staff.is_active;
+            document.getElementById('password').required = false;
+            document.getElementById('password').placeholder = t('password_placeholder');
+            
+            document.getElementById('staffModal').style.display = 'block';
+        } catch (error) {
+            console.error('Error loading staff:', error);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('staffModal').style.display = 'none';
+    }
+
+    document.getElementById('staffForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('staffId').value;
+        const data = {
+            first_name: document.getElementById('firstName').value,
+            last_name: document.getElementById('lastName').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            role: document.getElementById('role').value,
+            is_active: document.getElementById('isActive').checked
+        };
+        
+        const password = document.getElementById('password').value;
+        if (password) {
+            data.password = password;
+        }
+        
+        const url = id ? `/api/staff/${id}` : '/api/staff';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                closeModal();
+                loadStaff();
+            } else {
+                alert('Failed to save staff member. Check console for details.');
+                console.error(await response.json());
+            }
+        } catch (error) {
+            console.error('Error saving staff:', error);
+        }
+    });
+
+    async function toggleStaffStatus(id, active) {
+        try {
+            const response = await fetch(`/api/staff/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: active })
+            });
+            
+            if (response.ok) {
+                loadStaff();
+            } else {
+                alert('Failed to update staff status.');
+            }
+        } catch (error) {
+            console.error('Error updating staff status:', error);
+        }
+    }
+
+    // i18n
+    const translations = {
+        en: { staff_management: 'Staff Management', language: 'Language', back_to_dashboard: 'Back to Dashboard', add_staff: 'Add New Staff', name: 'Name', username: 'Username', role: 'Role', email: 'Email', phone: 'Phone', status: 'Status', actions: 'Actions', loading_staff: 'Loading staff members...', first_name: 'First Name', last_name: 'Last Name', password: 'Password', active_status: 'Active Status', cancel: 'Cancel', save_staff: 'Save Staff', failed_to_load: 'Failed to load staff members.', no_staff: 'No staff members found.', active: 'Active', inactive: 'Inactive', edit: 'Edit', deactivate: 'Deactivate', activate: 'Activate', edit_staff: 'Edit Staff', select_role: 'Select Role', password_placeholder: 'Leave blank to keep current password' },
+        ar: { staff_management: 'إدارة الموظفين', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', add_staff: 'إضافة موظف جديد', name: 'الاسم', username: 'اسم المستخدم', role: 'الدور', email: 'البريد الإلكتروني', phone: 'الهاتف', status: 'الحالة', actions: 'الإجراءات', loading_staff: 'جاري تحميل الموظفين...', first_name: 'الاسم الأول', last_name: 'اسم العائلة', password: 'كلمة المرور', active_status: 'الحالة النشطة', cancel: 'إلغاء', save_staff: 'حفظ الموظف', failed_to_load: 'فشل تحميل الموظفين.', no_staff: 'لا يوجد موظفون.', active: 'نشط', inactive: 'غير نشط', edit: 'تعديل', deactivate: 'إلغاء التنشيط', activate: 'تنشيط', edit_staff: 'تعديل الموظف', select_role: 'اختر الدور', password_placeholder: 'اتركه فارغًا للاحتفاظ بكلمة المرور الحالية' },
+        tr: { staff_management: 'Personel Yönetimi', language: 'Dil', back_to_dashboard: 'Panele Dön', add_staff: 'Yeni Personel Ekle', name: 'Ad Soyad', username: 'Kullanıcı Adı', role: 'Rol', email: 'E-posta', phone: 'Telefon', status: 'Durum', actions: 'İşlemler', loading_staff: 'Personel yükleniyor...', first_name: 'Ad', last_name: 'Soyad', password: 'Parola', active_status: 'Aktif Durum', cancel: 'İptal', save_staff: 'Personeli Kaydet', failed_to_load: 'Personel yüklenemedi.', no_staff: 'Personel bulunamadı.', active: 'Aktif', inactive: 'Pasif', edit: 'Düzenle', deactivate: 'Pasifleştir', activate: 'Aktifleştir', edit_staff: 'Personeli Düzenle', select_role: 'Rol Seçin', password_placeholder: 'Mevcut parolayı korumak için boş bırakın' }
+    };
+    function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
+    function applyTranslations(lang) {
+        const dict = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) el.textContent = dict[key];
+        });
+        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+    }
+    function initI18n() {
+        const saved = localStorage.getItem('lang') || 'en';
+        const select = document.getElementById('langSelect');
+        if (select) {
+            select.value = saved;
+            select.addEventListener('change', () => {
+                const lang = select.value;
+                localStorage.setItem('lang', lang);
+                applyTranslations(lang);
+                loadStaff();
+            });
+        }
+        applyTranslations(saved);
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => { initI18n(); loadStaff(); });
+</script>
+{% endblock %}
