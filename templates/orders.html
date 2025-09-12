@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Point of Sale & Orders - RMS{% endblock %}
 
 {% block extra_head %}
@@ -296,9 +295,12 @@
                 </div>
                 <div class="form-group" id="customerGroup">
                     <label for="customerId" data-i18n="customer">Customer</label>
-                    <select id="customerId" name="customer_id">
-                        <!-- Customers will be loaded here -->
-                    </select>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <select id="customerId" name="customer_id" style="flex: 1;">
+                            <!-- Customers will be loaded here -->
+                        </select>
+                        <button type="button" class="btn btn-secondary" onclick="openNewCustomerModal()" style="padding: 12px 16px; min-width: 150px;" data-i18n="add_new_customer">+ Add New Customer</button>
+                    </div>
                 </div>
                 <div class="order-items-section">
                     <h4 data-i18n="order_items">Order Items</h4>
@@ -310,6 +312,38 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" data-i18n="create_order">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Customer Modal -->
+    <div id="newCustomerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="add_new_customer">Add New Customer</h2>
+                <button class="close-btn" onclick="closeNewCustomerModal()">&times;</button>
+            </div>
+            <form id="newCustomerForm">
+                <div class="form-group">
+                    <label for="newFirstName" data-i18n="first_name">First Name</label>
+                    <input type="text" id="newFirstName" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="newLastName" data-i18n="last_name">Last Name</label>
+                    <input type="text" id="newLastName" name="last_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPhone" data-i18n="phone">Phone</label>
+                    <input type="tel" id="newPhone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="newEmail" data-i18n="email">Email</label>
+                    <input type="email" id="newEmail" name="email">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewCustomerModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="save_customer">Save Customer</button>
                 </div>
             </form>
         </div>
@@ -356,6 +390,7 @@
 <script>
     let menuItemsCache = [];
     let businessModelSettings = {};
+    let customersCache = [];
 
     // Load business model settings from API
     async function loadBusinessModelSettings() {
@@ -459,7 +494,7 @@
     
     async function loadPrerequisites() {
         // Load business model settings
-        await loadBusinessModelSettings(); // FIXED: Added await here
+        await loadBusinessModelSettings();
 
         // Populate order types based on business model
         populateOrderTypes();
@@ -480,10 +515,24 @@
         }
 
         // Load customers
-        const customersResponse = await fetch('/api/customers');
-        const customers = await customersResponse.json();
+        await loadCustomers();
+    }
+
+    async function loadCustomers() {
+        try {
+            const response = await fetch('/api/customers');
+            const customers = await response.json();
+            customersCache = customers;
+            populateCustomerDropdown();
+        } catch (error) {
+            console.error('Error loading customers:', error);
+        }
+    }
+
+    // Populate customer dropdown with current customers
+    function populateCustomerDropdown() {
         const customerSelect = document.getElementById('customerId');
-        customerSelect.innerHTML = `<option value="">Guest</option>` + customers
+        customerSelect.innerHTML = `<option value="">Guest</option>` + customersCache
             .map(c => `<option value="${c.id}">${(c.first_name||'') + ' ' + (c.last_name||'')} ${c.phone?'- '+c.phone:''}</option>`).join('');
     }
 
@@ -689,11 +738,207 @@
         }
     }
 
+    // New Customer Modal Functions
+    function openNewCustomerModal() {
+        document.getElementById('newCustomerForm').reset();
+        document.getElementById('newCustomerModal').style.display = 'block';
+    }
+
+    function closeNewCustomerModal() {
+        document.getElementById('newCustomerModal').style.display = 'none';
+    }
+
+    document.getElementById('newCustomerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const firstName = document.getElementById('newFirstName').value;
+        const lastName = document.getElementById('newLastName').value;
+        const phone = document.getElementById('newPhone').value;
+        const email = document.getElementById('newEmail').value;
+
+        const customerData = {
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone || null,
+            email: email || null
+        };
+
+        try {
+            const response = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(customerData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                // Add new customer to cache and dropdown
+                customersCache.push({
+                    id: result.id,
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                    email: email,
+                    loyalty_points: 0,
+                    total_orders: 0,
+                    total_spent: 0
+                });
+                populateCustomerDropdown();
+                
+                // Select the newly created customer
+                document.getElementById('customerId').value = result.id;
+                
+                closeNewCustomerModal();
+                alert(t('customer_created_successfully'));
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to create customer: ${errorData.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error creating customer:', error);
+            alert('Failed to create customer. Please try again.');
+        }
+    });
+
     // i18n
     const translations = {
-        en: { pos_orders: 'Point of Sale & Orders', language: 'Language', back_to_dashboard: 'Back to Dashboard', create_order: 'Create New Order', order_id: 'Order ID', type: 'Type', status: 'Status', table: 'Table', amount: 'Amount', date: 'Date', actions: 'Actions', order_type: 'Order Type', order_items: 'Order Items', add_item: '+ Add Item', cancel: 'Cancel', record_payment: 'Record Payment', method: 'Method', transaction_id_optional: 'Transaction ID (optional)', save_payment: 'Save Payment', details: 'Details', pay: 'Pay', receipt: 'Receipt', customer: 'Customer', status_pending: 'Pending', status_confirmed: 'Confirmed', status_cooking: 'Cooking', status_ready: 'Ready', status_served: 'Served', status_completed: 'Completed', status_cancelled: 'Cancelled', takeaway: 'Takeaway', dine_in: 'Dine-In', delivery: 'Delivery', delivery_address: 'Delivery Address', delivery_address_required: 'Delivery address is required for delivery orders.', min_order_amount_required: 'Minimum order amount required' },
-        ar: { pos_orders: 'نقطة البيع والطلبات', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', create_order: 'إنشاء طلب جديد', order_id: 'معرّف الطلب', type: 'النوع', status: 'الحالة', table: 'الطاولة', amount: 'المبلغ', date: 'التاريخ', actions: 'الإجراءات', order_type: 'نوع الطلب', order_items: 'عناصر الطلب', add_item: '+ إضافة عنصر', cancel: 'إلغاء', record_payment: 'تسجيل الدفع', method: 'الطريقة', transaction_id_optional: 'معرّف العملية (اختياري)', save_payment: 'حفظ الدفع', details: 'التفاصيل', pay: 'ادفع', receipt: 'الإيصال', customer: 'العميل', status_pending: 'معلق', status_confirmed: 'مؤكد', status_cooking: 'قيد الطهي', status_ready: 'جاهز', status_served: 'مُقدَّم', status_completed: 'مكتمل', status_cancelled: 'ملغى', takeaway: 'سفري', dine_in: 'تناول في المكان', delivery: 'توصيل', delivery_address: 'عنوان التوصيل', delivery_address_required: 'عنوان التوصيل مطلوب لطلبات التوصيل.', min_order_amount_required: 'الحد الأدنى لمبلغ الطلب مطلوب' },
-        tr: { pos_orders: 'POS ve Siparişler', language: 'Dil', back_to_dashboard: 'Panele Dön', create_order: 'Yeni Sipariş Oluştur', order_id: 'Sipariş No', type: 'Tür', status: 'Durum', table: 'Masa', amount: 'Tutar', date: 'Tarih', actions: 'İşlemler', order_type: 'Sipariş Türü', order_items: 'Sipariş Kalemleri', add_item: '+ Kalem Ekle', cancel: 'İptal', record_payment: 'Ödeme Kaydet', method: 'Yöntem', transaction_id_optional: 'İşlem No (opsiyonel)', save_payment: 'Ödemeyi Kaydet', details: 'Detaylar', pay: 'Öde', receipt: 'Fiş', customer: 'Müşteri', status_pending: 'Beklemede', status_confirmed: 'Onaylandı', status_cooking: 'Pişiriliyor', status_ready: 'Hazır', status_served: 'Servis Edildi', status_completed: 'Tamamlandı', status_cancelled: 'İptal Edildi', takeaway: 'Paket Servis', dine_in: 'Yemek Salonu', delivery: 'Teslimat', delivery_address: 'Teslimat Adresi', delivery_address_required: 'Teslimat siparişleri için teslimat adresi gereklidir.', min_order_amount_required: 'Minimum sipariş tutarı gerekli' }
+        en: { 
+            pos_orders: 'Point of Sale & Orders', 
+            language: 'Language', 
+            back_to_dashboard: 'Back to Dashboard', 
+            create_order: 'Create New Order', 
+            order_id: 'Order ID', 
+            type: 'Type', 
+            status: 'Status', 
+            table: 'Table', 
+            amount: 'Amount', 
+            date: 'Date', 
+            actions: 'Actions', 
+            order_type: 'Order Type', 
+            order_items: 'Order Items', 
+            add_item: '+ Add Item', 
+            cancel: 'Cancel', 
+            record_payment: 'Record Payment', 
+            method: 'Method', 
+            transaction_id_optional: 'Transaction ID (optional)', 
+            save_payment: 'Save Payment', 
+            details: 'Details', 
+            pay: 'Pay', 
+            receipt: 'Receipt', 
+            customer: 'Customer', 
+            status_pending: 'Pending', 
+            status_confirmed: 'Confirmed', 
+            status_cooking: 'Cooking', 
+            status_ready: 'Ready', 
+            status_served: 'Served', 
+            status_completed: 'Completed', 
+            status_cancelled: 'Cancelled', 
+            takeaway: 'Takeaway', 
+            dine_in: 'Dine-In', 
+            delivery: 'Delivery', 
+            delivery_address: 'Delivery Address', 
+            delivery_address_required: 'Delivery address is required for delivery orders.', 
+            min_order_amount_required: 'Minimum order amount required',
+            add_new_customer: 'Add New Customer',
+            first_name: 'First Name',
+            last_name: 'Last Name',
+            phone: 'Phone',
+            email: 'Email',
+            save_customer: 'Save Customer',
+            customer_created_successfully: 'Customer created successfully!',
+            guest: 'Guest'
+        },
+ar: {
+    pos_orders: 'نقطة البيع والطلبات',
+    language: 'اللغة',
+    back_to_dashboard: 'العودة للوحة التحكم',
+    create_order: 'إنشاء طلب جديد',
+    order_id: 'معرّف الطلب',
+    type: 'النوع',
+    status: 'الحالة',
+    table: 'الطاولة',
+    amount: 'المبلغ',
+    date: 'التاريخ',
+    actions: 'الإجراءات',
+    order_type: 'نوع الطلب',
+    order_items: 'عناصر الطلب',
+    add_item: '+ إضافة عنصر',
+    cancel: 'إلغاء',
+    record_payment: 'تسجيل الدفع',
+    method: 'الطريقة',
+    transaction_id_optional: 'معرّف العملية (اختياري)',
+    save_payment: 'حفظ الدفع',
+    details: 'التفاصيل',
+    pay: 'ادفع',
+    receipt: 'الإيصال',
+    customer: 'العميل',
+    status_pending: 'معلق',
+    status_confirmed: 'مؤكد',
+    status_cooking: 'قيد الطهي',
+    status_ready: 'جاهز',
+    status_served: 'مُقدَّم',
+    status_completed: 'مكتمل',
+    status_cancelled: 'ملغى',
+    takeaway: 'سفري',
+    dine_in: 'تناول في المكان',
+    delivery: 'توصيل',
+    delivery_address: 'عنوان التوصيل',
+    delivery_address_required: 'عنوان التوصيل مطلوب لطلبات التوصيل.',
+    min_order_amount_required: 'الحد الأدنى لمبلغ الطلب مطلوب',
+    add_new_customer: 'إضافة عميل جديد',
+    first_name: 'الاسم الأول',
+    last_name: 'الاسم الأخير',
+    phone: 'الهاتف',
+    email: 'البريد الإلكتروني',
+    save_customer: 'حفظ العميل',
+    customer_created_successfully: 'تم إنشاء العميل بنجاح!',
+    guest: 'ضيف'
+},
+tr: {
+    pos_orders: 'POS ve Siparişler',
+    language: 'Dil',
+    back_to_dashboard: 'Panele Dön',
+    create_order: 'Yeni Sipariş Oluştur',
+    order_id: 'Sipariş No',
+    type: 'Tür',
+    status: 'Durum',
+    table: 'Masa',
+    amount: 'Tutar',
+    date: 'Tarih',
+    actions: 'İşlemler',
+    order_type: 'Sipariş Türü',
+    order_items: 'Sipariş Kalemleri',
+    add_item: '+ Kalem Ekle',
+    cancel: 'İptal',
+    record_payment: 'Ödeme Kaydet',
+    method: 'Yöntem',
+    transaction_id_optional: 'İşlem No (opsiyonel)',
+    save_payment: 'Ödemeyi Kaydet',
+    details: 'Detaylar',
+    pay: 'Öde',
+    receipt: 'Fiş',
+    customer: 'Müşteri',
+    status_pending: 'Beklemede',
+    status_confirmed: 'Onaylandı',
+    status_cooking: 'Pişiriliyor',
+    status_ready: 'Hazır',
+    status_served: 'Servis Edildi',
+    status_completed: 'Tamamlandı',
+    status_cancelled: 'İptal Edildi',
+    takeaway: 'Paket Servis',
+    dine_in: 'Yemek Salonu',
+    delivery: 'Teslimat',
+    delivery_address: 'Teslimat Adresi',
+    delivery_address_required: 'Teslimat siparişleri için teslimat adresi gereklidir.',
+    min_order_amount_required: 'Minimum sipariş tutarı gerekli',
+    add_new_customer: 'Yeni Müşteri Ekle',
+    first_name: 'Ad',
+    last_name: 'Soyad',
+    phone: 'Telefon',
+    email: 'E-posta',
+    save_customer: 'Müşteriyi Kaydet',
+    customer_created_successfully: 'Müşteri başarıyla oluşturuldu!',
+    guest: 'Misafir'
+},
     };
     function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
     function applyTranslations(lang) {

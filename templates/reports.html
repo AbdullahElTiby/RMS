@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block title %}Reports & Analytics - RMS{% endblock %}
-
 {% block extra_head %}
     <style>
         .page-content {
@@ -163,7 +161,7 @@
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
         }
         .data-table {
             width: 100%;
@@ -236,233 +234,269 @@
             font-weight: 700;
             color: #667eea;
         }
+        /* Loading Overlay Styles */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 {% endblock %}
-
 {% block content %}
-    <div class="main-content">
-        <div class="header">
-            <h1 data-i18n="reports_dashboard">Reports & Analytics Dashboard</h1>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
-                <button class="btn btn-primary" onclick="generateAllReports()" data-i18n="generate_all">Generate All Reports</button>
+<div class="main-content">
+    <div class="header">
+        <h1 data-i18n="reports_dashboard">Reports & Analytics Dashboard</h1>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn btn-secondary" data-i18n="back_to_dashboard">Back to Dashboard</a>
+            <button class="btn btn-primary" onclick="generateAllReports()" data-i18n="generate_all">Generate All Reports</button>
+        </div>
+    </div>
+    <!-- Date Range Filter -->
+    <div class="filter-controls">
+        <div class="form-group">
+            <label for="startDate" data-i18n="start_date">Start Date</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+            <label for="endDate" data-i18n="end_date">End Date</label>
+            <input type="date" id="endDate">
+        </div>
+        <button class="btn btn-primary" onclick="applyDateFilters()" data-i18n="apply_filters">Apply Filters</button>
+        <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="clear_filters">Clear Filters</button>
+    </div>
+
+    <!-- Sales Report Section -->
+    <div class="report-section" id="salesReport">
+        <h2 data-i18n="sales_report">Sales Report</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 data-i18n="total_revenue">Total Revenue</h3>
+                <div class="stat-value" id="totalRevenue">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="total_orders">Total Orders</h3>
+                <div class="stat-value" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="avg_order_value">Average Order Value</h3>
+                <div class="stat-value" id="avgOrderValue">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="best_day">Best Selling Day</h3>
+                <div class="stat-value" id="bestDay">N/A</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportSalesReport()" data-i18n="export_sales">Export Sales Report</button>
+        </div>
+    </div>
+
+    <!-- Popular Items Report Section -->
+    <div class="report-section" id="popularItemsReport">
+        <h2 data-i18n="popular_items">Popular Menu Items</h2>
+        <div id="popularItemsLoading" class="loading" data-i18n="loading_popular">Loading popular items...</div>
+        <table class="data-table" id="popularItemsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th data-i18n="item_name">Item Name</th>
+                    <th data-i18n="quantity_sold">Quantity Sold</th>
+                    <th data-i18n="total_revenue">Total Revenue</th>
+                    <th data-i18n="percent_sales">Percentage of Sales</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Popular items will be loaded here -->
+            </tbody>
+        </table>
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportPopularItemsReport()" data-i18n="export_popular">Export Popular Items</button>
+        </div>
+    </div>
+
+    <!-- Inventory Report Section -->
+    <div class="report-section" id="inventoryReport">
+        <h2 data-i18n="inventory_report">Inventory Report</h2>
+        <div id="inventoryLoading" class="loading" data-i18n="loading_inventory">Loading inventory data...</div>
+        <table class="data-table" id="inventoryTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th data-i18n="ingredient">Ingredient</th>
+                    <th data-i18n="current_stock">Current Stock</th>
+                    <th data-i18n="min_stock">Minimum Stock</th>
+                    <th data-i18n="status">Status</th>
+                    <th data-i18n="cost">Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Inventory data will be loaded here -->
+            </tbody>
+        </table>
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportInventoryReport()" data-i18n="export_inventory">Export Inventory Report</button>
+        </div>
+    </div>
+
+    <!-- Staff Performance Section -->
+    <div class="report-section" id="staffPerformanceReport">
+        <h2 data-i18n="staff_performance">Staff Performance</h2>
+        <div id="staffLoading" class="loading" data-i18n="loading_staff_perf">Loading staff performance data...</div>
+        <table class="data-table" id="staffPerformanceTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th data-i18n="staff_member">Staff Member</th>
+                    <th data-i18n="role">Role</th>
+                    <th data-i18n="shifts_worked">Shifts Worked</th>
+                    <th data-i18n="orders_processed">Orders Processed</th>
+                    <th data-i18n="performance_rating">Performance Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Staff performance data will be loaded here -->
+            </tbody>
+        </table>
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportStaffReport()" data-i18n="export_staff">Export Staff Report</button>
+        </div>
+    </div>
+
+    <!-- Customer Analytics Section -->
+    <div class="report-section" id="customerAnalyticsReport">
+        <h2 data-i18n="customer_analytics">Customer Analytics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 data-i18n="total_customers">Total Customers</h3>
+                <div class="stat-value" id="totalCustomers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="repeat_customers">Repeat Customers</h3>
+                <div class="stat-value" id="repeatCustomers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="avg_loyalty_points">Average Loyalty Points</h3>
+                <div class="stat-value" id="avgLoyaltyPoints">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="top_spending_customer">Top Spending Customer</h3>
+                <div class="stat-value" id="topCustomer">N/A</div>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportCustomerReport()" data-i18n="export_customer">Export Customer Report</button>
+        </div>
+    </div>
+
+    <!-- Advanced Analytics Dashboard Section -->
+    <div class="report-section" id="advancedAnalytics">
+        <h2 data-i18n="advanced_analytics_dashboard">Advanced Analytics Dashboard</h2>
+        <p data-i18n="advanced_analytics_description">Comprehensive insights into your restaurant performance</p>
+        <!-- Analytics Overview Metrics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 data-i18n="analytics_total_revenue_30_days">Total Revenue (30 days)</h3>
+                <div class="stat-value" id="analytics-total-revenue">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="analytics_total_orders_30_days">Total Orders (30 days)</h3>
+                <div class="stat-value" id="analytics-total-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="analytics_active_customers">Active Customers</h3>
+                <div class="stat-value" id="analytics-active-customers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="analytics_loyalty_points">Loyalty Points</h3>
+                <div class="stat-value" id="analytics-loyalty-points">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="analytics_average_order">Average Order</h3>
+                <div class="stat-value" id="analytics-avg-order">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="analytics_low_stock_items">Low Stock Items</h3>
+                <div class="stat-value" id="analytics-low-stock">0</div>
             </div>
         </div>
 
-        <!-- Date Range Filter -->
-        <div class="filter-controls">
-            <div class="form-group">
-                <label for="startDate" data-i18n="start_date">Start Date</label>
-                <input type="date" id="startDate">
+        <!-- Analytics Charts -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+            <div class="chart-container">
+                <h3 style="margin-top: 0; margin-bottom: 15px;" data-i18n="revenue_trends">Revenue Trends</h3>
+                <canvas id="analytics-revenue-chart" style="height: 250px; width: 100%;">
+                    <div class="loading">Loading chart...</div>
+                </canvas>
             </div>
-            <div class="form-group">
-                <label for="endDate" data-i18n="end_date">End Date</label>
-                <input type="date" id="endDate">
-            </div>
-            <button class="btn btn-primary" onclick="applyDateFilters()" data-i18n="apply_filters">Apply Filters</button>
-            <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="clear_filters">Clear Filters</button>
-        </div>
-
-        <!-- Sales Report Section -->
-        <div class="report-section" id="salesReport">
-            <h2 data-i18n="sales_report">Sales Report</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 data-i18n="total_revenue">Total Revenue</h3>
-                    <div class="stat-value" id="totalRevenue">₺0.00</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="total_orders">Total Orders</h3>
-                    <div class="stat-value" id="totalOrders">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="avg_order_value">Average Order Value</h3>
-                    <div class="stat-value" id="avgOrderValue">₺0.00</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="best_day">Best Selling Day</h3>
-                    <div class="stat-value" id="bestDay">N/A</div>
-                </div>
-            </div>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportSalesReport()" data-i18n="export_sales">Export Sales Report</button>
+            <div class="chart-container">
+                <h3 style="margin-top: 0; margin-bottom: 15px;" data-i18n="customer_segments">Customer Segments</h3>
+                <canvas id="analytics-customer-chart" style="height: 250px; width: 100%;">
+                    <div class="loading">Loading chart...</div>
+                </canvas>
             </div>
         </div>
 
-        <!-- Popular Items Report Section -->
-        <div class="report-section" id="popularItemsReport">
-            <h2 data-i18n="popular_items">Popular Menu Items</h2>
-            <div id="popularItemsLoading" class="loading" data-i18n="loading_popular">Loading popular items...</div>
-            <table class="data-table" id="popularItemsTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th data-i18n="item_name">Item Name</th>
-                        <th data-i18n="quantity_sold">Quantity Sold</th>
-                        <th data-i18n="total_revenue">Total Revenue</th>
-                        <th data-i18n="percent_sales">Percentage of Sales</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Popular items will be loaded here -->
-                </tbody>
-            </table>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportPopularItemsReport()" data-i18n="export_popular">Export Popular Items</button>
-            </div>
-        </div>
-
-        <!-- Inventory Report Section -->
-        <div class="report-section" id="inventoryReport">
-            <h2 data-i18n="inventory_report">Inventory Report</h2>
-            <div id="inventoryLoading" class="loading" data-i18n="loading_inventory">Loading inventory data...</div>
-            <table class="data-table" id="inventoryTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th data-i18n="ingredient">Ingredient</th>
-                        <th data-i18n="current_stock">Current Stock</th>
-                        <th data-i18n="min_stock">Minimum Stock</th>
-                        <th data-i18n="status">Status</th>
-                        <th data-i18n="cost">Cost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Inventory data will be loaded here -->
-                </tbody>
-            </table>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportInventoryReport()" data-i18n="export_inventory">Export Inventory Report</button>
-            </div>
-        </div>
-
-        <!-- Staff Performance Section -->
-        <div class="report-section" id="staffPerformanceReport">
-            <h2 data-i18n="staff_performance">Staff Performance</h2>
-            <div id="staffLoading" class="loading" data-i18n="loading_staff_perf">Loading staff performance data...</div>
-            <table class="data-table" id="staffPerformanceTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th data-i18n="staff_member">Staff Member</th>
-                        <th data-i18n="role">Role</th>
-                        <th data-i18n="shifts_worked">Shifts Worked</th>
-                        <th data-i18n="orders_processed">Orders Processed</th>
-                        <th data-i18n="performance_rating">Performance Rating</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Staff performance data will be loaded here -->
-                </tbody>
-            </table>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportStaffReport()" data-i18n="export_staff">Export Staff Report</button>
-            </div>
-        </div>
-
-        <!-- Customer Analytics Section -->
-        <div class="report-section" id="customerAnalyticsReport">
-            <h2 data-i18n="customer_analytics">Customer Analytics</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 data-i18n="total_customers">Total Customers</h3>
-                    <div class="stat-value" id="totalCustomers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="repeat_customers">Repeat Customers</h3>
-                    <div class="stat-value" id="repeatCustomers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="avg_loyalty_points">Average Loyalty Points</h3>
-                    <div class="stat-value" id="avgLoyaltyPoints">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="top_spending_customer">Top Spending Customer</h3>
-                    <div class="stat-value" id="topCustomer">N/A</div>
+        <!-- Analytics Insights -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+            <div class="analytics-insight-card">
+                <h3 data-i18n="customer_insights">Customer Insights</h3>
+                <div id="analytics-customer-insights">
+                    <div class="loading">Loading insights...</div>
                 </div>
             </div>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportCustomerReport()" data-i18n="export_customer">Export Customer Report</button>
-            </div>
-        </div>
-
-        <!-- Advanced Analytics Dashboard Section -->
-        <div class="report-section" id="advancedAnalytics">
-            <h2 data-i18n="advanced_analytics_dashboard">📊 Advanced Analytics Dashboard</h2>
-            <p data-i18n="advanced_analytics_description">Comprehensive insights into your restaurant performance</p>
-
-            <!-- Analytics Overview Metrics -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_total_revenue_30_days">💰 Total Revenue (30 days)</h3>
-                    <div class="stat-value" id="analytics-total-revenue">₺0.00</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_total_orders_30_days">📦 Total Orders (30 days)</h3>
-                    <div class="stat-value" id="analytics-total-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_active_customers">👥 Active Customers</h3>
-                    <div class="stat-value" id="analytics-active-customers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_loyalty_points">⭐ Loyalty Points</h3>
-                    <div class="stat-value" id="analytics-loyalty-points">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_average_order">📊 Average Order</h3>
-                    <div class="stat-value" id="analytics-avg-order">₺0.00</div>
-                </div>
-                <div class="stat-card">
-                    <h3 data-i18n="analytics_low_stock_items">⚠️ Low Stock Items</h3>
-                    <div class="stat-value" id="analytics-low-stock">0</div>
+            <div class="analytics-insight-card">
+                <h3 data-i18n="operational_efficiency">Operational Efficiency</h3>
+                <div id="analytics-operational-insights">
+                    <div class="loading">Loading insights...</div>
                 </div>
             </div>
-
-            <!-- Analytics Charts -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
-                <div class="chart-container">
-                    <h3 style="margin-top: 0; margin-bottom: 15px;" data-i18n="revenue_trends">📈 Revenue Trends</h3>
-                    <canvas id="analytics-revenue-chart" style="height: 250px; width: 100%;">
-                        <div class="loading">Loading chart...</div>
-                    </canvas>
-                </div>
-                <div class="chart-container">
-                    <h3 style="margin-top: 0; margin-bottom: 15px;" data-i18n="customer_segments">👥 Customer Segments</h3>
-                    <canvas id="analytics-customer-chart" style="height: 250px; width: 100%;">
-                        <div class="loading">Loading chart...</div>
-                    </canvas>
+            <div class="analytics-insight-card">
+                <h3 data-i18n="profitability_analysis">Profitability Analysis</h3>
+                <div id="analytics-profitability-insights">
+                    <div class="loading">Loading insights...</div>
                 </div>
             </div>
-
-            <!-- Analytics Insights -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-                <div class="analytics-insight-card">
-                    <h3 data-i18n="customer_insights">🎯 Customer Insights</h3>
-                    <div id="analytics-customer-insights">
-                        <div class="loading">Loading insights...</div>
-                    </div>
-                </div>
-                <div class="analytics-insight-card">
-                    <h3 data-i18n="operational_efficiency">⚙️ Operational Efficiency</h3>
-                    <div id="analytics-operational-insights">
-                        <div class="loading">Loading insights...</div>
-                    </div>
-                </div>
-                <div class="analytics-insight-card">
-                    <h3 data-i18n="profitability_analysis">💼 Profitability Analysis</h3>
-                    <div id="analytics-profitability-insights">
-                        <div class="loading">Loading insights...</div>
-                    </div>
-                </div>
-                <div class="analytics-insight-card">
-                    <h3 data-i18n="top_customers">🏆 Top Customers</h3>
-                    <div id="analytics-top-customers">
-                        <div class="loading">Loading top customers...</div>
-                    </div>
+            <div class="analytics-insight-card">
+                <h3 data-i18n="top_customers">Top Customers</h3>
+                <div id="analytics-top-customers">
+                    <div class="loading">Loading top customers...</div>
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
+</div>
 
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p data-i18n="exporting_report">Exporting report...</p>
+    </div>
+</div>
+{% endblock %}
 {% block scripts %}
 <script>
     async function checkAuth() {
@@ -484,17 +518,14 @@
 
     async function loadSalesReport() {
         if (!await checkAuth()) return;
-
         const params = getDateParams();
         const url = `/api/reports/sales${params ? '?' + params : ''}`;
-
         try {
             const response = await fetch(url);
             const data = await response.json();
-
-            document.getElementById('totalRevenue').textContent = `₺${(data.total_sales || 0).toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `$${(data.total_sales || 0).toFixed(2)}`;
             document.getElementById('totalOrders').textContent = data.total_orders || 0;
-            document.getElementById('avgOrderValue').textContent = `₺${(data.average_order_value || 0).toFixed(2)}`;
+            document.getElementById('avgOrderValue').textContent = `$${(data.average_order_value || 0).toFixed(2)}`;
             document.getElementById('bestDay').textContent = data.best_day || 'N/A';
         } catch (error) {
             console.error('Error loading sales report:', error);
@@ -503,29 +534,24 @@
 
     async function loadPopularItems() {
         if (!await checkAuth()) return;
-
         const params = getDateParams();
         const url = `/api/reports/popular-items${params ? '?' + params : ''}`;
-
         try {
             const response = await fetch(url);
             const items = await response.json();
-
             const tableBody = document.querySelector('#popularItemsTable tbody');
             tableBody.innerHTML = '';
-
             items.forEach(item => {
                 const row = `
                     <tr>
                         <td>${item.item_name}</td>
                         <td>${item.total_quantity}</td>
-                        <td>₺${(item.total_revenue || 0).toFixed(2)}</td>
+                        <td>$${(item.total_revenue || 0).toFixed(2)}</td>
                         <td>${calculatePercentage(item.total_revenue, items)}%</td>
                     </tr>
                 `;
                 tableBody.innerHTML += row;
             });
-
             document.getElementById('popularItemsLoading').style.display = 'none';
             document.getElementById('popularItemsTable').style.display = 'table';
         } catch (error) {
@@ -541,14 +567,11 @@
 
     async function loadInventoryReport() {
         if (!await checkAuth()) return;
-
         try {
             const response = await fetch('/api/inventory');
             const inventory = await response.json();
-
             const tableBody = document.querySelector('#inventoryTable tbody');
             tableBody.innerHTML = '';
-
             inventory.forEach(item => {
                 const row = `
                     <tr>
@@ -556,12 +579,11 @@
                         <td>${item.current_stock} ${item.unit}</td>
                         <td>${item.min_stock} ${item.unit}</td>
                         <td><span style="color: ${item.status === 'low' ? '#dc3545' : '#28a745'}">${item.status}</span></td>
-                        <td>₺${(item.cost_per_unit || 0).toFixed(2)}/${item.unit}</td>
+                        <td>$${(item.cost_per_unit || 0).toFixed(2)}/${item.unit}</td>
                     </tr>
                 `;
                 tableBody.innerHTML += row;
             });
-
             document.getElementById('inventoryLoading').style.display = 'none';
             document.getElementById('inventoryTable').style.display = 'table';
         } catch (error) {
@@ -571,16 +593,13 @@
 
     async function loadCustomerAnalytics() {
         if (!await checkAuth()) return;
-
         try {
             const response = await fetch('/api/customers');
             const customers = await response.json();
-
             const totalCustomers = customers.length;
             const repeatCustomers = customers.filter(c => c.total_orders > 1).length;
             const avgLoyaltyPoints = customers.reduce((sum, c) => sum + c.loyalty_points, 0) / totalCustomers || 0;
             const topCustomer = customers.reduce((max, c) => c.total_spent > max.total_spent ? c : max, {total_spent: 0});
-
             document.getElementById('totalCustomers').textContent = totalCustomers;
             document.getElementById('repeatCustomers').textContent = repeatCustomers;
             document.getElementById('avgLoyaltyPoints').textContent = avgLoyaltyPoints.toFixed(0);
@@ -592,7 +611,6 @@
 
     async function loadStaffPerformance() {
         if (!await checkAuth()) return;
-
         try {
             // This would require additional backend endpoints for staff performance
             // For now, we'll just show a message
@@ -608,7 +626,10 @@
     function applyDateFilters() {
         loadSalesReport();
         loadPopularItems();
-        // Other reports can be filtered as needed
+        loadInventoryReport();
+        loadCustomerAnalytics();
+        loadStaffPerformance();
+        loadAnalyticsData(); // Load analytics data
     }
 
     function clearFilters() {
@@ -623,67 +644,150 @@
         await loadInventoryReport();
         await loadCustomerAnalytics();
         await loadStaffPerformance();
+        await loadAnalyticsData(); // Load analytics data
     }
 
-    // Export functions (placeholder - would need backend support for actual export)
+    // ========================
+    // ✅ NEW EXPORT FUNCTIONS — REAL CSV DOWNLOADS
+    // ========================
+
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
     function exportSalesReport() {
-        alert('Sales report export functionality would generate a CSV/PDF file.');
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        showLoading();
+        fetch(`/api/reports/export/sales${startDate ? '?start_date=' + startDate : ''}${endDate ? '&end_date=' + endDate : ''}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed'));
+            });
     }
 
     function exportPopularItemsReport() {
-        alert('Popular items report export functionality would generate a CSV/PDF file.');
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        showLoading();
+        fetch(`/api/reports/export/popular-items${startDate ? '?start_date=' + startDate : ''}${endDate ? '&end_date=' + endDate : ''}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `popular_items_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed'));
+            });
     }
 
     function exportInventoryReport() {
-        alert('Inventory report export functionality would generate a CSV/PDF file.');
+        showLoading();
+        fetch('/api/reports/export/inventory')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inventory_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed'));
+            });
     }
 
     function exportStaffReport() {
-        alert('Staff report export functionality would generate a CSV/PDF file.');
+        showLoading();
+        fetch('/api/reports/export/staff')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `staff_performance_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed'));
+            });
     }
 
     function exportCustomerReport() {
-        alert('Customer report export functionality would generate a CSV/PDF file.');
-    }
-
-    // Set default date range to last 30 days
-    function setDefaultDateRange() {
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
-
-        document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
-        document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
-    }
-
-    // i18n
-        const translations = {
-        en: { reports_dashboard: 'Reports & Analytics Dashboard', language: 'Language', back_to_dashboard: 'Back to Dashboard', generate_all: 'Generate All Reports', start_date: 'Start Date', end_date: 'End Date', apply_filters: 'Apply Filters', clear_filters: 'Clear Filters', sales_report: 'Sales Report', total_revenue: 'Total Revenue', total_orders: 'Total Orders', avg_order_value: 'Average Order Value', best_day: 'Best Selling Day', export_sales: 'Export Sales Report', popular_items: 'Popular Menu Items', loading_popular: 'Loading popular items...', item_name: 'Item Name', quantity_sold: 'Quantity Sold', percent_sales: 'Percentage of Sales', export_popular: 'Export Popular Items', inventory_report: 'Inventory Report', loading_inventory: 'Loading inventory data...', ingredient: 'Ingredient', current_stock: 'Current Stock', min_stock: 'Minimum Stock', status: 'Status', cost: 'Cost', export_inventory: 'Export Inventory Report', staff_performance: 'Staff Performance', loading_staff_perf: 'Loading staff performance data...', staff_member: 'Staff Member', role: 'Role', shifts_worked: 'Shifts Worked', orders_processed: 'Orders Processed', performance_rating: 'Performance Rating', export_staff: 'Export Staff Report', customer_analytics: 'Customer Analytics', total_customers: 'Total Customers', repeat_customers: 'Repeat Customers', avg_loyalty_points: 'Average Loyalty Points', top_spending_customer: 'Top Spending Customer', export_customer: 'Export Customer Report', advanced_analytics_dashboard: '📊 Advanced Analytics Dashboard', advanced_analytics_description: 'Comprehensive insights into your restaurant performance', analytics_total_revenue_30_days: '💰 Total Revenue (30 days)', analytics_total_orders_30_days: '📦 Total Orders (30 days)', analytics_active_customers: '👥 Active Customers', analytics_loyalty_points: '⭐ Loyalty Points', analytics_average_order: '📊 Average Order', analytics_low_stock_items: '⚠️ Low Stock Items', revenue_trends: '📈 Revenue Trends', customer_segments: '👥 Customer Segments', customer_insights: '🎯 Customer Insights', operational_efficiency: '⚙️ Operational Efficiency', profitability_analysis: '💼 Profitability Analysis', top_customers: '🏆 Top Customers', new_customers_1_order: 'New Customers (1 order)', regular_customers_2_10_orders: 'Regular Customers (2-10 orders)', loyal_customers_10_plus_orders: 'Loyal Customers (10+ orders)', bronze_tier: 'Bronze Tier', silver_tier: 'Silver Tier', gold_tier: 'Gold Tier', platinum_tier: 'Platinum Tier', table_utilization: 'Table Utilization', total_tables: 'Total Tables', occupied_tables: 'Occupied Tables', average_inventory_value: 'Average Inventory Value', total_ingredients: 'Total Ingredients', active_staff: 'Active Staff', completed_orders: 'Completed Orders', cost_of_goods_sold: 'Cost of Goods Sold', gross_profit: 'Gross Profit', operating_expenses: 'Operating Expenses', net_profit: 'Net Profit', profit_margin: 'Profit Margin', profitability_score: 'Profitability Score', ai_assistant_title: '🤖 AI Restaurant Assistant', inventory_insights_title: '📊 Inventory Insights', inventory_insights_desc: 'Analyze your inventory levels, usage patterns, and get smart recommendations for stock management.', get_insights: 'Get Insights', menu_suggestions_title: '🍽️ Menu Suggestions', menu_suggestions_desc: 'Get AI-powered menu recommendations based on your current inventory and seasonal trends.', get_suggestions: 'Get Suggestions', demand_prediction_title: '🔮 Demand Prediction', demand_prediction_desc: 'Predict demand for ingredients in the upcoming days to optimize your purchasing.', get_prediction: 'Get Prediction', inventory_optimization_title: '💡 Inventory Optimization', inventory_optimization_desc: 'Get AI-powered recommendations to optimize your inventory costs and reduce waste.', get_optimization: 'Get Optimization', staff_performance_coming_soon: 'Staff performance tracking coming soon...', no_customer_data: 'No customer data available' },
-        ar: { reports_dashboard: 'لوحة التقارير والتحليلات', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', generate_all: 'توليد جميع التقارير', start_date: 'تاريخ البدء', end_date: 'تاريخ الانتهاء', apply_filters: 'تطبيق الفلاتر', clear_filters: 'مسح الفلاتر', sales_report: 'تقرير المبيعات', total_revenue: 'إجمالي الإيرادات', total_orders: 'إجمالي الطلبات', avg_order_value: 'متوسط قيمة الطلب', best_day: 'أفضل يوم مبيعات', export_sales: 'تصدير تقرير المبيعات', popular_items: 'الأصناف الأكثر مبيعًا', loading_popular: 'جاري تحميل الأصناف...', item_name: 'اسم الصنف', quantity_sold: 'الكمية المباعة', percent_sales: 'نسبة المبيعات', export_popular: 'تصدير الأصناف الشائعة', inventory_report: 'تقرير المخزون', loading_inventory: 'جاري تحميل بيانات المخزون...', ingredient: 'المكوّن', current_stock: 'المخزون الحالي', min_stock: 'الحد الأدنى للمخزون', status: 'الحالة', cost: 'التكلفة', export_inventory: 'تصدير تقرير المخزون', staff_performance: 'أداء الموظفين', loading_staff_perf: 'جاري تحميل بيانات أداء الموظفين...', staff_member: 'الموظف', role: 'الدور', shifts_worked: 'عدد الورديات', orders_processed: 'عدد الطلبات المعالجة', performance_rating: 'تقييم الأداء', export_staff: 'تصدير تقرير الموظفين', customer_analytics: 'تحليلات العملاء', total_customers: 'إجمالي العملاء', repeat_customers: 'العملاء المتكررون', avg_loyalty_points: 'متوسط نقاط الولاء', top_spending_customer: 'أعلى عميل إنفاقًا', export_customer: 'تصدير تقرير العملاء', advanced_analytics_dashboard: '📊 لوحة التحليلات المتقدمة', advanced_analytics_description: 'رؤى شاملة في أداء مطعمك', analytics_total_revenue_30_days: '💰 إجمالي الإيرادات (30 يومًا)', analytics_total_orders_30_days: '📦 إجمالي الطلبات (30 يومًا)', analytics_active_customers: '👥 العملاء النشطون', analytics_loyalty_points: '⭐ نقاط الولاء', analytics_average_order: '📊 متوسط الطلب', analytics_low_stock_items: '⚠️ الأصناف منخفضة المخزون', revenue_trends: '📈 اتجاهات الإيرادات', customer_segments: '👥 شرائح العملاء', customer_insights: '🎯 تحليلات العملاء', operational_efficiency: '⚙️ الكفاءة التشغيلية', profitability_analysis: '💼 تحليل الربحية', top_customers: '🏆 أفضل العملاء', new_customers_1_order: 'العملاء الجدد (طلب واحد)', regular_customers_2_10_orders: 'العملاء العاديون (2-10 طلبات)', loyal_customers_10_plus_orders: 'العملاء المخلصون (10+ طلبات)', bronze_tier: 'المستوى البرونزي', silver_tier: 'المستوى الفضي', gold_tier: 'المستوى الذهبي', platinum_tier: 'المستوى البلاتيني', table_utilization: 'استخدام الطاولات', total_tables: 'إجمالي الطاولات', occupied_tables: 'الطاولات المشغولة', average_inventory_value: 'متوسط قيمة المخزون', total_ingredients: 'إجمالي المكونات', active_staff: 'الموظفين النشطين', completed_orders: 'الطلبات المكتملة', cost_of_goods_sold: 'تكلفة البضائع المباعة', gross_profit: 'إجمالي الربح', operating_expenses: 'المصروفات التشغيلية', net_profit: 'صافي الربح', profit_margin: 'هامش الربح', profitability_score: 'درجة الربحية', ai_assistant_title: '🤖 مساعد المطعم الذكي', inventory_insights_title: '📊 تحليلات المخزون', inventory_insights_desc: 'حلل مستويات مخزونك وأنماط الاستخدام واحصل على توصيات ذكية لإدارة المخزون.', get_insights: 'الحصول على التحليلات', menu_suggestions_title: '🍽️ اقتراحات القائمة', menu_suggestions_desc: 'احصل على توصيات قائمة مدعومة بالذكاء الاصطناعي بناءً على مخزونك الحالي والاتجاهات الموسمية.', get_suggestions: 'الحصول على الاقتراحات', demand_prediction_title: '🔮 توقع الطلب', demand_prediction_desc: 'توقع الطلب على المكونات للأيام القادمة لتحسين مشترياتك.', get_prediction: 'الحصول على التنبؤ', inventory_optimization_title: '💡 تحسين المخزون', inventory_optimization_desc: 'احصل على توصيات مدعومة بالذكاء الاصطناعي لتحسين تكاليف مخزونك وتقليل الهدر.', get_optimization: 'الحصول على التحسين', staff_performance_coming_soon: 'تتبع أداء الموظفين قادم قريبًا...', no_customer_data: 'لا توجد بيانات عملاء متاحة' },
-        tr: { reports_dashboard: 'Raporlar ve Analitik Paneli', language: 'Dil', back_to_dashboard: 'Panele Dön', generate_all: 'Tüm Raporları Oluştur', start_date: 'Başlangıç Tarihi', end_date: 'Bitiş Tarihi', apply_filters: 'Filtreleri Uygula', clear_filters: 'Filtreleri Temizle', sales_report: 'Satış Raporu', total_revenue: 'Toplam Gelir', total_orders: 'Toplam Sipariş', avg_order_value: 'Ortalama Sipariş Değeri', best_day: 'En İyi Satış Günü', export_sales: 'Satış Raporunu Dışa Aktar', popular_items: 'Popüler Menü Öğeleri', loading_popular: 'Popüler öğeler yükleniyor...', item_name: 'Öğe Adı', quantity_sold: 'Satılan Miktar', percent_sales: 'Satış Yüzdesi', export_popular: 'Popüler Öğeleri Dışa Aktar', inventory_report: 'Stok Raporu', loading_inventory: 'Stok verileri yükleniyor...', ingredient: 'Malzeme', current_stock: 'Mevcut Stok', min_stock: 'Asgari Stok', status: 'Durum', cost: 'Maliyet', export_inventory: 'Stok Raporunu Dışa Aktar', staff_performance: 'Personel Performansı', loading_staff_perf: 'Personel performans verileri yükleniyor...', staff_member: 'Personel', role: 'Rol', shifts_worked: 'Çalışılan Vardiyalar', orders_processed: 'İşlenen Siparişler', performance_rating: 'Performans Puanı', export_staff: 'Personel Raporunu Dışa Aktar', customer_analytics: 'Müşteri Analitiği', total_customers: 'Toplam Müşteri', repeat_customers: 'Tekrar Eden Müşteriler', avg_loyalty_points: 'Ortalama Sadaket Puanı', top_spending_customer: 'En Çok Harcayan Müşteri', export_customer: 'Müşteri Raporunu Dışa Aktar', advanced_analytics_dashboard: '📊 Gelişmiş Analitik Paneli', advanced_analytics_description: 'Restoran performansınıza kapsamlı içgörüler', analytics_total_revenue_30_days: '💰 Toplam Gelir (30 gün)', analytics_total_orders_30_days: '📦 Toplam Sipariş (30 gün)', analytics_active_customers: '👥 Aktif Müşteriler', analytics_loyalty_points: '⭐ Sadakat Puanları', analytics_average_order: '📊 Ortalama Sipariş', analytics_low_stock_items: '⚠️ Düşük Stok Öğeleri', revenue_trends: '📈 Gelir Eğilimleri', customer_segments: '👥 Müşteri Segmentleri', customer_insights: '🎯 Müşteri Analizleri', operational_efficiency: '⚙️ Operasyonel Verimlilik', profitability_analysis: '💼 Karlılık Analizi', top_customers: '🏆 En İyi Müşteriler', ai_assistant_title: '🤖 AI Restoran Asistanı', inventory_insights_title: '📊 Stok Analizleri', inventory_insights_desc: 'Stok seviyelerinizi, kullanım paternlerinizi analiz edin ve stok yönetimi için akıllı öneriler alın.', get_insights: 'Analizleri Al', menu_suggestions_title: '🍽️ Menü Önerileri', menu_suggestions_desc: 'Mevcut stokunuz ve mevsimsel trendlere dayalı AI destekli menü önerileri alın.', get_suggestions: 'Önerileri Al', demand_prediction_title: '🔮 Talep Tahmini', demand_prediction_desc: 'Satın alma işlemlerinizi optimize etmek için yaklaşan günlerdeki malzeme talebini tahmin edin.', get_prediction: 'Tahmini Al', inventory_optimization_title: '💡 Stok Optimizasyonu', inventory_optimization_desc: 'Stok maliyetlerinizi optimize etmek ve atığı azaltmak için AI destekli öneriler alın.', get_optimization: 'Optimizasyonu Al', staff_performance_coming_soon: 'Personel performans takibi yakında...', no_customer_data: 'Müşteri verisi mevcut değil' }
-    };
-    function applyTranslations(lang) {
-        const dict = translations[lang] || translations.en;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (dict[key]) el.textContent = dict[key];
-        });
-        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
-        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
-    }
-    function initI18n() {
-        const saved = localStorage.getItem('lang') || 'en';
-        const select = document.getElementById('langSelect');
-        if (select) {
-            select.value = saved;
-            select.addEventListener('change', () => {
-                const lang = select.value;
-                localStorage.setItem('lang', lang);
-                applyTranslations(lang);
-                generateAllReports();
+        showLoading();
+        fetch('/api/reports/export/customers')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `customer_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed'));
             });
-        }
-        applyTranslations(saved);
     }
 
     // Analytics variables
@@ -693,29 +797,25 @@
     // Load analytics data
     async function loadAnalyticsData() {
         if (!await checkAuth()) return;
-
         try {
             // Load overview metrics
             const overviewResponse = await fetch('/api/analytics/overview');
             const overviewData = await overviewResponse.json();
-
-            document.getElementById('analytics-total-revenue').textContent = '₺' + (overviewData.revenue.total || 0).toFixed(2);
+            document.getElementById('analytics-total-revenue').textContent = `$${(overviewData.revenue.total || 0).toFixed(2)}`;
             document.getElementById('analytics-total-orders').textContent = overviewData.revenue.orders || 0;
             document.getElementById('analytics-active-customers').textContent = overviewData.customers.active || 0;
             document.getElementById('analytics-loyalty-points').textContent = overviewData.customers.loyalty_points || 0;
-            document.getElementById('analytics-avg-order').textContent = '₺' + (overviewData.revenue.average_order || 0).toFixed(2);
+            document.getElementById('analytics-avg-order').textContent = `$${(overviewData.revenue.average_order || 0).toFixed(2)}`;
             document.getElementById('analytics-low-stock').textContent = overviewData.inventory.low_stock || 0;
 
             // Load revenue trends
             const revenueResponse = await fetch('/api/analytics/revenue-trends');
             const revenueData = await revenueResponse.json();
-
             createAnalyticsRevenueChart(revenueData.daily_revenue);
 
             // Load customer insights
             const customerResponse = await fetch('/api/analytics/customer-insights');
             const customerData = await customerResponse.json();
-
             createAnalyticsCustomerChart(customerData.segments);
             displayAnalyticsCustomerInsights(customerData);
             displayAnalyticsTopCustomers(customerData.top_customers);
@@ -723,15 +823,12 @@
             // Load operational efficiency
             const operationalResponse = await fetch('/api/analytics/operational-efficiency');
             const operationalData = await operationalResponse.json();
-
             displayAnalyticsOperationalInsights(operationalData);
 
             // Load profitability
             const profitabilityResponse = await fetch('/api/analytics/profitability');
             const profitabilityData = await profitabilityResponse.json();
-
             displayAnalyticsProfitabilityInsights(profitabilityData);
-
         } catch (error) {
             console.error('Error loading analytics:', error);
         }
@@ -739,18 +836,14 @@
 
     function createAnalyticsRevenueChart(dailyRevenue) {
         const ctx = document.getElementById('analytics-revenue-chart').getContext('2d');
-
         if (analyticsRevenueChart) {
             analyticsRevenueChart.destroy();
         }
-
         const labels = dailyRevenue.map(item => {
             const date = new Date(item.date);
             return date.toLocaleDateString();
         });
-
         const data = dailyRevenue.map(item => item.revenue);
-
         analyticsRevenueChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -772,7 +865,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return '₺' + value.toFixed(2);
+                                return '$' + value.toFixed(2);
                             }
                         }
                     }
@@ -788,11 +881,9 @@
 
     function createAnalyticsCustomerChart(segments) {
         const ctx = document.getElementById('analytics-customer-chart').getContext('2d');
-
         if (analyticsCustomerChart) {
             analyticsCustomerChart.destroy();
         }
-
         analyticsCustomerChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -822,7 +913,6 @@
     function displayAnalyticsCustomerInsights(data) {
         const lang = localStorage.getItem('lang') || 'en';
         const dict = translations[lang] || translations.en;
-
         const container = document.getElementById('analytics-customer-insights');
         container.innerHTML = `
             <div class="analytics-metric">
@@ -859,7 +949,6 @@
     function displayAnalyticsOperationalInsights(data) {
         const lang = localStorage.getItem('lang') || 'en';
         const dict = translations[lang] || translations.en;
-
         const container = document.getElementById('analytics-operational-insights');
         container.innerHTML = `
             <div class="analytics-metric">
@@ -876,7 +965,7 @@
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.average_inventory_value || 'Average Inventory Value'}</span>
-                <span class="analytics-metric-value">₺${(data.avg_inventory_value || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.avg_inventory_value || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.total_ingredients || 'Total Ingredients'}</span>
@@ -896,28 +985,27 @@
     function displayAnalyticsProfitabilityInsights(data) {
         const lang = localStorage.getItem('lang') || 'en';
         const dict = translations[lang] || translations.en;
-
         const container = document.getElementById('analytics-profitability-insights');
         container.innerHTML = `
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.total_revenue || 'Total Revenue'}</span>
-                <span class="analytics-metric-value">₺${(data.revenue || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.revenue || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.cost_of_goods_sold || 'Cost of Goods Sold'}</span>
-                <span class="analytics-metric-value">₺${(data.cogs || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.cogs || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.gross_profit || 'Gross Profit'}</span>
-                <span class="analytics-metric-value">₺${(data.gross_profit || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.gross_profit || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.operating_expenses || 'Operating Expenses'}</span>
-                <span class="analytics-metric-value">₺${(data.operating_expenses || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.operating_expenses || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.net_profit || 'Net Profit'}</span>
-                <span class="analytics-metric-value">₺${(data.net_profit || 0).toFixed(2)}</span>
+                <span class="analytics-metric-value">$${(data.net_profit || 0).toFixed(2)}</span>
             </div>
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${dict.profit_margin || 'Profit Margin'}</span>
@@ -933,34 +1021,347 @@
     function displayAnalyticsTopCustomers(topCustomers) {
         const lang = localStorage.getItem('lang') || 'en';
         const dict = translations[lang] || translations.en;
-
         const container = document.getElementById('analytics-top-customers');
         if (topCustomers.length === 0) {
             container.innerHTML = `<p>${dict.no_customer_data || 'No customer data available'}</p>`;
             return;
         }
-
         container.innerHTML = topCustomers.map((customer, index) => `
             <div class="analytics-metric">
                 <span class="analytics-metric-label">${index + 1}. ${customer.name}</span>
-                <span class="analytics-metric-value">₺${customer.total_spent.toFixed(2)}</span>
+                <span class="analytics-metric-value">$${customer.total_spent.toFixed(2)}</span>
             </div>
         `).join('');
     }
 
-    async function generateAllReports() {
-        await loadSalesReport();
-        await loadPopularItems();
-        await loadInventoryReport();
-        await loadCustomerAnalytics();
-        await loadStaffPerformance();
-        await loadAnalyticsData(); // Load analytics data
+    // Set default date range to last 30 days
+    function setDefaultDateRange() {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+        document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
     }
 
-    // Initialize reports
+    // i18n
+    const translations = {
+        en: {
+            reports_dashboard: 'Reports & Analytics Dashboard',
+            language: 'Language',
+            back_to_dashboard: 'Back to Dashboard',
+            generate_all: 'Generate All Reports',
+            start_date: 'Start Date',
+            end_date: 'End Date',
+            apply_filters: 'Apply Filters',
+            clear_filters: 'Clear Filters',
+            sales_report: 'Sales Report',
+            total_revenue: 'Total Revenue',
+            total_orders: 'Total Orders',
+            avg_order_value: 'Average Order Value',
+            best_day: 'Best Selling Day',
+            export_sales: 'Export Sales Report',
+            popular_items: 'Popular Menu Items',
+            loading_popular: 'Loading popular items...',
+            item_name: 'Item Name',
+            quantity_sold: 'Quantity Sold',
+            percent_sales: 'Percentage of Sales',
+            export_popular: 'Export Popular Items',
+            inventory_report: 'Inventory Report',
+            loading_inventory: 'Loading inventory data...',
+            ingredient: 'Ingredient',
+            current_stock: 'Current Stock',
+            min_stock: 'Minimum Stock',
+            status: 'Status',
+            cost: 'Cost',
+            export_inventory: 'Export Inventory Report',
+            staff_performance: 'Staff Performance',
+            loading_staff_perf: 'Loading staff performance data...',
+            staff_member: 'Staff Member',
+            role: 'Role',
+            shifts_worked: 'Shifts Worked',
+            orders_processed: 'Orders Processed',
+            performance_rating: 'Performance Rating',
+            export_staff: 'Export Staff Report',
+            customer_analytics: 'Customer Analytics',
+            total_customers: 'Total Customers',
+            repeat_customers: 'Repeat Customers',
+            avg_loyalty_points: 'Average Loyalty Points',
+            top_spending_customer: 'Top Spending Customer',
+            export_customer: 'Export Customer Report',
+            advanced_analytics_dashboard: 'Advanced Analytics Dashboard',
+            advanced_analytics_description: 'Comprehensive insights into your restaurant performance',
+            analytics_total_revenue_30_days: 'Total Revenue (30 days)',
+            analytics_total_orders_30_days: 'Total Orders (30 days)',
+            analytics_active_customers: 'Active Customers',
+            analytics_loyalty_points: 'Loyalty Points',
+            analytics_average_order: 'Average Order',
+            analytics_low_stock_items: 'Low Stock Items',
+            revenue_trends: 'Revenue Trends',
+            customer_segments: 'Customer Segments',
+            customer_insights: 'Customer Insights',
+            operational_efficiency: 'Operational Efficiency',
+            profitability_analysis: 'Profitability Analysis',
+            top_customers: 'Top Customers',
+            new_customers_1_order: 'New Customers (1 order)',
+            regular_customers_2_10_orders: 'Regular Customers (2-10 orders)',
+            loyal_customers_10_plus_orders: 'Loyal Customers (10+ orders)',
+            bronze_tier: 'Bronze Tier',
+            silver_tier: 'Silver Tier',
+            gold_tier: 'Gold Tier',
+            platinum_tier: 'Platinum Tier',
+            table_utilization: 'Table Utilization',
+            total_tables: 'Total Tables',
+            occupied_tables: 'Occupied Tables',
+            average_inventory_value: 'Average Inventory Value',
+            total_ingredients: 'Total Ingredients',
+            active_staff: 'Active Staff',
+            completed_orders: 'Completed Orders',
+            cost_of_goods_sold: 'Cost of Goods Sold',
+            gross_profit: 'Gross Profit',
+            operating_expenses: 'Operating Expenses',
+            net_profit: 'Net Profit',
+            profit_margin: 'Profit Margin',
+            profitability_score: 'Profitability Score',
+            ai_assistant_title: 'AI Restaurant Assistant',
+            inventory_insights_title: 'Inventory Insights',
+            inventory_insights_desc: 'Analyze your inventory levels, usage patterns, and get smart recommendations for stock management.',
+            get_insights: 'Get Insights',
+            menu_suggestions_title: 'Menu Suggestions',
+            menu_suggestions_desc: 'Get AI-powered menu recommendations based on your current inventory and seasonal trends.',
+            get_suggestions: 'Get Suggestions',
+            demand_prediction_title: 'Demand Prediction',
+            demand_prediction_desc: 'Predict demand for ingredients in the upcoming days to optimize your purchasing.',
+            get_prediction: 'Get Prediction',
+            inventory_optimization_title: 'Inventory Optimization',
+            inventory_optimization_desc: 'Get AI-powered recommendations to optimize your inventory costs and reduce waste.',
+            get_optimization: 'Get Optimization',
+            staff_performance_coming_soon: 'Staff performance tracking coming soon...',
+            no_customer_data: 'No customer data available',
+            export_failed: 'Export failed. Please try again.',
+            exporting_report: 'Exporting report...'
+        },
+        ar: {
+            reports_dashboard: 'لوحة التقارير والتحليلات',
+            language: 'اللغة',
+            back_to_dashboard: 'العودة للوحة التحكم',
+            generate_all: 'إنشاء جميع التقارير',
+            start_date: 'تاريخ البدء',
+            end_date: 'تاريخ الانتهاء',
+            apply_filters: 'تطبيق الفلاتر',
+            clear_filters: 'مسح الفلاتر',
+            sales_report: 'تقرير المبيعات',
+            total_revenue: 'إجمالي الإيرادات',
+            total_orders: 'إجمالي الطلبات',
+            avg_order_value: 'متوسط قيمة الطلب',
+            best_day: 'أفضل يوم مبيعات',
+            export_sales: 'تصدير تقرير المبيعات',
+            popular_items: 'العناصر الشائعة',
+            loading_popular: 'جاري تحميل العناصر الشائعة...',
+            item_name: 'اسم العنصر',
+            quantity_sold: 'الكمية المباعة',
+            percent_sales: 'نسبة المبيعات',
+            export_popular: 'تصدير العناصر الشائعة',
+            inventory_report: 'تقرير المخزون',
+            loading_inventory: 'جاري تحميل بيانات المخزون...',
+            ingredient: 'المكون',
+            current_stock: 'المخزون الحالي',
+            min_stock: 'أدنى مستوى مخزون',
+            status: 'الحالة',
+            cost: 'التكلفة',
+            export_inventory: 'تصدير تقرير المخزون',
+            staff_performance: 'أداء الموظفين',
+            loading_staff_perf: 'جاري تحميل بيانات أداء الموظفين...',
+            staff_member: 'عضو الفريق',
+            role: 'الدور',
+            shifts_worked: 'الورديات التي تم العمل بها',
+            orders_processed: 'الطلبات المعالجة',
+            performance_rating: 'تقييم الأداء',
+            export_staff: 'تصدير تقرير الموظفين',
+            customer_analytics: 'تحليلات العملاء',
+            total_customers: 'إجمالي العملاء',
+            repeat_customers: 'العملاء المتكررون',
+            avg_loyalty_points: 'نقاط الولاء المتوسطة',
+            top_spending_customer: 'أعلى عميل إنفاقًا',
+            export_customer: 'تصدير تقرير العملاء',
+            advanced_analytics_dashboard: 'لوحة التحليلات المتقدمة',
+            advanced_analytics_description: 'رؤى شاملة حول أداء مطعمك',
+            analytics_total_revenue_30_days: 'إجمالي الإيرادات (30 يومًا)',
+            analytics_total_orders_30_days: 'إجمالي الطلبات (30 يومًا)',
+            analytics_active_customers: 'العملاء النشطون',
+            analytics_loyalty_points: 'نقاط الولاء',
+            analytics_average_order: 'متوسط الطلب',
+            analytics_low_stock_items: 'عناصر المخزون المنخفض',
+            revenue_trends: 'اتجاهات الإيرادات',
+            customer_segments: 'شرائح العملاء',
+            customer_insights: 'رؤى العملاء',
+            operational_efficiency: 'الكفاءة التشغيلية',
+            profitability_analysis: 'تحليل الربحية',
+            top_customers: 'أفضل العملاء',
+            new_customers_1_order: 'عملاء جدد (طلب واحد)',
+            regular_customers_2_10_orders: 'عملاء منتظمون (2-10 طلبات)',
+            loyal_customers_10_plus_orders: 'عملاء مخلصون (10+ طلبات)',
+            bronze_tier: 'الدرع البرونزي',
+            silver_tier: 'الدرع الفضي',
+            gold_tier: 'الدرع الذهبي',
+            platinum_tier: 'الدرع البلاتيني',
+            table_utilization: 'استخدام الطاولات',
+            total_tables: 'إجمالي الطاولات',
+            occupied_tables: 'الطاولات المشغولة',
+            average_inventory_value: 'قيمة المخزون المتوسطة',
+            total_ingredients: 'إجمالي المكونات',
+            active_staff: 'الموظفون النشطون',
+            completed_orders: 'الطلبات المكتملة',
+            cost_of_goods_sold: 'تكلفة البضائع المباعة',
+            gross_profit: 'الربح الإجمالي',
+            operating_expenses: 'المصاريف التشغيلية',
+            net_profit: 'الربح الصافي',
+            profit_margin: 'هامش الربح',
+            profitability_score: 'درجة الربحية',
+            ai_assistant_title: 'مساعد الذكاء الاصطناعي للمطعم',
+            inventory_insights_title: 'رؤى المخزون',
+            inventory_insights_desc: 'قم بتحليل مستويات المخزون وأنماط الاستخدام والحصول على توصيات ذكية لإدارة المخزون.',
+            get_insights: 'احصل على الرؤى',
+            menu_suggestions_title: 'اقتراحات القائمة',
+            menu_suggestions_desc: 'احصل على اقتراحات قائمة مدفوعة بالذكاء الاصطناعي بناءً على مخزونك الحالي والاتجاهات الموسمية.',
+            get_suggestions: 'احصل على الاقتراحات',
+            demand_prediction_title: 'توقع الطلب',
+            demand_prediction_desc: 'توقع الطلب على المكونات في الأيام القادمة لتحسين عمليات الشراء الخاصة بك.',
+            get_prediction: 'احصل على التوقع',
+            inventory_optimization_title: 'تحسين المخزون',
+            inventory_optimization_desc: 'احصل على توصيات مدعومة بالذكاء الاصطناعي لتحسين تكاليف المخزون وتقليل الهدر.',
+            get_optimization: 'احصل على التحسين',
+            staff_performance_coming_soon: 'تتبع أداء الموظفين قادم قريبًا...',
+            no_customer_data: 'لا توجد بيانات عملاء متاحة',
+            export_failed: 'فشل التصدير. يرجى المحاولة مرة أخرى.',
+            exporting_report: 'جاري تصدير التقرير...'
+        },
+        tr: {
+            reports_dashboard: 'Raporlar ve Analitik Paneli',
+            language: 'Dil',
+            back_to_dashboard: 'Panele Dön',
+            generate_all: 'Tüm Raporları Oluştur',
+            start_date: 'Başlangıç Tarihi',
+            end_date: 'Bitiş Tarihi',
+            apply_filters: 'Filtreleri Uygula',
+            clear_filters: 'Filtreleri Temizle',
+            sales_report: 'Satış Raporu',
+            total_revenue: 'Toplam Gelir',
+            total_orders: 'Toplam Sipariş',
+            avg_order_value: 'Ortalama Sipariş Değeri',
+            best_day: 'En İyi Satış Günü',
+            export_sales: 'Satış Raporunu Dışa Aktar',
+            popular_items: 'Popüler Menü Öğeleri',
+            loading_popular: 'Popüler öğeler yükleniyor...',
+            item_name: 'Öğe Adı',
+            quantity_sold: 'Satılan Miktar',
+            percent_sales: 'Satış Yüzdesi',
+            export_popular: 'Popüler Öğeleri Dışa Aktar',
+            inventory_report: 'Stok Raporu',
+            loading_inventory: 'Stok verileri yükleniyor...',
+            ingredient: 'Malzeme',
+            current_stock: 'Mevcut Stok',
+            min_stock: 'Asgari Stok',
+            status: 'Durum',
+            cost: 'Maliyet',
+            export_inventory: 'Stok Raporunu Dışa Aktar',
+            staff_performance: 'Personel Performansı',
+            loading_staff_perf: 'Personel performans verileri yükleniyor...',
+            staff_member: 'Personel',
+            role: 'Rol',
+            shifts_worked: 'Çalışılan Vardiyalar',
+            orders_processed: 'İşlenen Siparişler',
+            performance_rating: 'Performans Puanı',
+            export_staff: 'Personel Raporunu Dışa Aktar',
+            customer_analytics: 'Müşteri Analitiği',
+            total_customers: 'Toplam Müşteri',
+            repeat_customers: 'Tekrar Eden Müşteriler',
+            avg_loyalty_points: 'Ortalama Sadaket Puanı',
+            top_spending_customer: 'En Çok Harcayan Müşteri',
+            export_customer: 'Müşteri Raporunu Dışa Aktar',
+            advanced_analytics_dashboard: 'Gelişmiş Analitik Paneli',
+            advanced_analytics_description: 'Restoran performansınıza kapsamlı görüşler',
+            analytics_total_revenue_30_days: 'Toplam Gelir (30 gün)',
+            analytics_total_orders_30_days: 'Toplam Sipariş (30 gün)',
+            analytics_active_customers: 'Aktif Müşteriler',
+            analytics_loyalty_points: 'Sadaket Puanları',
+            analytics_average_order: 'Ortalama Sipariş',
+            analytics_low_stock_items: 'Düşük Stok Öğeleri',
+            revenue_trends: 'Gelir Eğilimleri',
+            customer_segments: 'Müşteri Segmentleri',
+            customer_insights: 'Müşteri İncelemeleri',
+            operational_efficiency: 'Operasyonel Verimlilik',
+            profitability_analysis: 'Karlılık Analizi',
+            top_customers: 'En İyi Müşteriler',
+            new_customers_1_order: 'Yeni Müşteriler (1 sipariş)',
+            regular_customers_2_10_orders: 'Düzenli Müşteriler (2-10 sipariş)',
+            loyal_customers_10_plus_orders: 'Sadık Müşteriler (10+ sipariş)',
+            bronze_tier: 'Bronz Katman',
+            silver_tier: 'Gümüş Katman',
+            gold_tier: 'Altın Katman',
+            platinum_tier: 'Platin Katman',
+            table_utilization: 'Masa Kullanımı',
+            total_tables: 'Toplam Masa',
+            occupied_tables: 'Dolu Masalar',
+            average_inventory_value: 'Ortalama Stok Değeri',
+            total_ingredients: 'Toplam Malzeme',
+            active_staff: 'Aktif Personel',
+            completed_orders: 'Tamamlanan Siparişler',
+            cost_of_goods_sold: 'Satılan Malların Maliyeti',
+            gross_profit: 'Brüt Kar',
+            operating_expenses: 'İşletme Giderleri',
+            net_profit: 'Net Kar',
+            profit_margin: 'Kar Marjı',
+            profitability_score: 'Karlılık Skoru',
+            ai_assistant_title: 'AI Restoran Asistanı',
+            inventory_insights_title: 'Stok İncelemeleri',
+            inventory_insights_desc: 'Stok seviyelerinizi, kullanım desenlerinizi analiz edin ve stok yönetimi için akıllı öneriler alın.',
+            get_insights: 'İncelemeleri Al',
+            menu_suggestions_title: 'Menü Önerileri',
+            menu_suggestions_desc: 'Mevcut stokunuz ve mevsimsel trendlere dayalı olarak AI destekli menü önerileri alın.',
+            get_suggestions: 'Önerileri Al',
+            demand_prediction_title: 'Talep Tahmini',
+            demand_prediction_desc: 'Satın alma işlemlerinizi optimize etmek için yakındaki günlerdeki malzeme talebini tahmin edin.',
+            get_prediction: 'Tahmini Al',
+            inventory_optimization_title: 'Stok Optimizasyonu',
+            inventory_optimization_desc: 'Stok maliyetlerinizi optimize etmek ve israfı azaltmak için AI destekli öneriler alın.',
+            get_optimization: 'Optimizasyonu Al',
+            staff_performance_coming_soon: 'Personel performans takibi yakında...',
+            no_customer_data: 'Müşteri verisi mevcut değil',
+            export_failed: 'Dışa aktarma başarısız oldu. Lütfen tekrar deneyin.',
+            exporting_report: 'Rapor dışa aktarılıyor...'
+        }
+    };
+
+    function t(key){ 
+        const lang = localStorage.getItem('lang') || 'en'; 
+        return (translations[lang] || translations.en)[key] || key; 
+    }
+
+    function applyTranslations(lang) {
+        const dict = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                el.textContent = dict[key];
+            }
+        });
+        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+    }
+
+    function initI18n() {
+        const saved = localStorage.getItem('lang') || 'en';
+        applyTranslations(saved);
+        // Listen for global language changes
+        window.addEventListener('languageChanged', (event) => {
+            applyTranslations(event.detail.language);
+            generateAllReports(); // Reload reports when language changes
+        });
+    }
+
+    // Initial Load
     document.addEventListener('DOMContentLoaded', () => {
         initI18n();
-        setDefaultDateRange();
         generateAllReports();
     });
 </script>
