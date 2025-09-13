@@ -412,6 +412,7 @@ def get_menu():
         recipes = Recipe.query.filter_by(menu_item_id=item.id).all()
         # Check if we have enough inventory for all recipe ingredients
         can_make = True
+        total_cost = 0.0
         if recipes:  # Only check if item has recipes defined
             for recipe in recipes:
                 ingredient = Ingredient.query.get(recipe.ingredient_id)
@@ -420,7 +421,8 @@ def get_menu():
                     available_quantity = ingredient.current_stock or 0
                     if available_quantity < required_quantity:
                         can_make = False
-                        break
+                    # Calculate total cost
+                    total_cost += recipe.quantity_required * (ingredient.cost_per_unit or 0)
         # Item is available if it's marked as available AND we have enough inventory
         effective_availability = item.is_available and can_make
         menu_data.append({
@@ -432,7 +434,8 @@ def get_menu():
             'preparation_time': item.preparation_time,
             'image_url': item.image_url,
             'is_available': effective_availability,  # Modified to consider inventory
-            'inventory_available': can_make  # Additional field to distinguish inventory vs manual availability
+            'inventory_available': can_make,  # Additional field to distinguish inventory vs manual availability
+            'total_ingredient_cost': round(total_cost, 2)  # Total cost of ingredients
         })
     return jsonify(menu_data)
 # Image Upload

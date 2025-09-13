@@ -677,6 +677,7 @@
                     ${item.image_url ? `<div class="image-container"><img src="${item.image_url}" alt="${item.name}" class="item-image" onerror="this.style.display='none'"></div>` : ''}
                     <h3>${item.name}</h3>
                     <div class="price">₺${item.price}</div>
+                    <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 8px;">Cost: ₺${item.total_ingredient_cost}</div>
                     <span class="category">${item.category}</span>
                     <div class="status-badge ${item.is_available ? 'status-available' : 'status-unavailable'}">
                         ${item.is_available ? dict.available : dict.unavailable}
