@@ -631,10 +631,6 @@
 
         <!-- Order Totals -->
         <div class="order-totals" id="orderTotals" style="display: none;">
-            <div class="total-row">
-                <span data-i18n="subtotal">Subtotal:</span>
-                <span id="subtotal">₺0.00</span>
-            </div>
             <div class="total-row final">
                 <span data-i18n="total">Total:</span>
                 <span id="total">₺0.00</span>
@@ -890,11 +886,9 @@
         });
 
         // Calculate totals
-        const subtotal = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const total = subtotal;
+        const total = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
         // Update totals display
-        document.getElementById('subtotal').textContent = `₺${subtotal.toFixed(2)}`;
         document.getElementById('total').textContent = `₺${total.toFixed(2)}`;
 
         orderTotalsDiv.style.display = 'block';
@@ -1167,8 +1161,6 @@
                 delivery: 'Delivery',
                 no_items_in_order: 'No items in order',
                 click_menu_items: 'Click on menu items to add them',
-                subtotal: 'Subtotal:',
-                tax: 'Tax (10%):',
                 total: 'Total:',
                 cash: 'Cash',
                 card: 'Card',
@@ -1199,8 +1191,6 @@
                 delivery: 'توصيل',
                 no_items_in_order: 'لا توجد عناصر في الطلب',
                 click_menu_items: 'انقر على عناصر القائمة لإضافتها',
-                subtotal: 'المجموع الفرعي:',
-                tax: 'الضريبة (10%):',
                 total: 'المجموع:',
                 cash: 'نقدي',
                 card: 'بطاقة',
@@ -1231,8 +1221,6 @@
                 delivery: 'Teslimat',
                 no_items_in_order: 'Siparişte öğe yok',
                 click_menu_items: 'Öğeleri eklemek için menü öğelerine tıklayın',
-                subtotal: 'Ara toplam:',
-                tax: 'Vergi (%10):',
                 total: 'Toplam:',
                 cash: 'Nakit',
                 card: 'Kart',

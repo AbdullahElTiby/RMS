@@ -107,34 +107,69 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
     def has_permission(self, required_permission):
         """Check if user has the required permission based on their role"""
-        role_permissions = {
-            'admin': ['manage_all', 'view_reports', 'manage_staff', 'manage_menu', 'manage_inventory'],
-            'manager': ['view_reports', 'manage_staff', 'manage_menu', 'manage_inventory'],
+        # First check if it's a system role with default permissions
+        system_role_permissions = {
+            'admin': ['manage_all', 'view_reports', 'manage_staff', 'manage_menu', 'manage_inventory', 'manage_reservations', 'manage_tables', 'manage_customers', 'manage_settings', 'access_ai'],
+            'manager': ['view_reports', 'manage_staff', 'manage_menu', 'manage_inventory', 'manage_reservations', 'manage_tables', 'manage_customers', 'manage_settings', 'access_ai'],
             'head_chef': ['manage_kitchen', 'view_kitchen_reports', 'manage_inventory'],
             'chef': ['manage_kitchen', 'view_kitchen_reports'],
             'sous_chef': ['manage_kitchen'],
             'bartender': ['manage_bar', 'view_bar_reports'],
-            'waiter': ['take_orders', 'view_table_status'],
-            'cashier': ['process_payments', 'view_sales'],
+            'waiter': ['take_orders', 'view_table_status', 'manage_orders'],
+            'cashier': ['process_payments', 'view_sales', 'manage_orders'],
             'host': ['manage_reservations', 'view_table_status'],
             'delivery_driver': ['manage_deliveries', 'view_delivery_orders'],
             'cleaner': ['view_cleaning_schedule']
         }
-        return required_permission in role_permissions.get(self.role, [])
-# Role validation function
+
+        # Check system role permissions first
+        if self.role in system_role_permissions:
+            if 'manage_all' in system_role_permissions[self.role] or required_permission in system_role_permissions[self.role]:
+                return True
+
+        # Check custom role permissions from database
+        try:
+            db_role = Role.query.filter_by(name=self.role).first()
+            if db_role and db_role.permissions:
+                permissions = json.loads(db_role.permissions)
+                return required_permission in permissions
+        except:
+            pass
+
+        return False
+# Role validation function - now checks database roles
 def validate_role(role):
-    valid_roles = [
-        'admin', 'manager', 'head_chef', 'chef', 'sous_chef', 
-        'bartender', 'waiter', 'cashier', 'host', 'delivery_driver', 'cleaner'
-    ]
-    return role in valid_roles
+    # Always allow system roles
+    system_roles = ['admin', 'manager', 'head_chef', 'chef', 'sous_chef',
+                   'bartender', 'waiter', 'cashier', 'host', 'delivery_driver', 'cleaner']
+
+    if role in system_roles:
+        return True
+
+    # Check if role exists in database
+    try:
+        db_role = Role.query.filter_by(name=role).first()
+        return db_role is not None
+    except:
+        # If database is not available, fall back to system roles
+        return role in system_roles
+class Category(db.Model):
+    __tablename__ = 'categories'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class MenuItem(db.Model):
     __tablename__ = 'menu_items'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=False)  # appetizer, main, dessert, drink, etc.
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    category = db.relationship('Category', backref=db.backref('menu_items', lazy=True))
     is_available = db.Column(db.Boolean, default=True)
     preparation_time = db.Column(db.Integer)  # in minutes
     image_url = db.Column(db.String(200))
@@ -301,6 +336,10 @@ def dashboard():
 def menu_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage menu
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_menu'):
+        return render_template('access_denied.html'), 403
     return render_template('menu.html')
 @app.route('/our-menu')
 def public_menu_page():
@@ -309,64 +348,100 @@ def public_menu_page():
 def order_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage orders
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_orders'):
+        return render_template('access_denied.html'), 403
     return render_template('orders.html')
 @app.route('/inventory')
 def inventory_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage inventory
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_inventory'):
+        return render_template('access_denied.html'), 403
     return render_template('inventory.html')
 @app.route('/staff_schedule')
 def staff_schedule_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage staff schedules
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_staff'):
+        return render_template('access_denied.html'), 403
     return render_template('staff_schedule.html')
 @app.route('/reservations')
 def reservations_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage reservations
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_reservations'):
+        return render_template('access_denied.html'), 403
     return render_template('reservations.html')
 @app.route('/reports')
 def reports_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to view reports
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('view_reports'):
+        return render_template('access_denied.html'), 403
     return render_template('reports.html')
 @app.route('/staff')
 def staff_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage staff
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_staff'):
+        return render_template('access_denied.html'), 403
     return render_template('staff.html')
 @app.route('/customers')
 def customers_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage customers
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_customers'):
+        return render_template('access_denied.html'), 403
     return render_template('customers.html')
 @app.route('/tables')
 def tables_management():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to manage tables
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_tables'):
+        return render_template('access_denied.html'), 403
     return render_template('tables.html')
 @app.route('/kitchen')
 def kitchen_display():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to access kitchen
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_kitchen'):
+        return render_template('access_denied.html'), 403
     return render_template('kitchen.html')
 @app.route('/cashier')
 def cashier_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    # Check if user has cashier role or higher
-    user_role = session.get('role')
-    if user_role not in ['admin', 'manager', 'cashier']:
-        return jsonify({'message': 'Access denied. Cashier role or higher required.'}), 403
+    # Check if user has permission to process payments
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('process_payments'):
+        return render_template('access_denied.html'), 403
     return render_template('cashier.html')
 @app.route('/settings')
 def settings_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    # Check if user has admin or manager role
-    user_role = session.get('role')
-    if user_role not in ['admin', 'manager']:
-        return jsonify({'message': 'Access denied. Admin or Manager role required.'}), 403
+    # Check if user has permission to manage settings
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('manage_settings'):
+        return render_template('access_denied.html'), 403
     return render_template('settings.html')
 @app.route('/logout')
 def logout():
@@ -402,7 +477,7 @@ def api_login():
 def get_menu():
     category = request.args.get('category')
     if category:
-        items = MenuItem.query.filter_by(category=category).all()
+        items = MenuItem.query.filter(MenuItem.category.has(name=category)).all()
     else:
         items = MenuItem.query.all()
     # Check inventory availability for each item based on recipe requirements
@@ -430,7 +505,8 @@ def get_menu():
             'name': item.name,
             'description': item.description,
             'price': item.price,
-            'category': item.category,
+            'category': item.category.name if item.category else 'Uncategorized',
+            'category_id': item.category_id,
             'preparation_time': item.preparation_time,
             'image_url': item.image_url,
             'is_available': effective_availability,  # Modified to consider inventory
@@ -557,11 +633,25 @@ def add_menu_item():
     price = float(data['price']) if 'price' in data else 0
     preparation_time = int(data['preparation_time']) if data.get('preparation_time') else None
     is_available = data.get('is_available', 'true').lower() == 'true'
+
+    # Get category_id - either from form data or from category name
+    category_id = data.get('category_id')
+    if not category_id and data.get('category'):
+        # Try to find category by name for backwards compatibility
+        category = Category.query.filter_by(name=data['category']).first()
+        if category:
+            category_id = category.id
+        else:
+            return jsonify({'message': 'Category not found'}), 400
+
+    if not category_id:
+        return jsonify({'message': 'Category is required'}), 400
+
     item = MenuItem(
         name=data['name'],
         description=data.get('description', ''),
         price=price,
-        category=data['category'],
+        category_id=category_id,
         preparation_time=preparation_time,
         image_url=image_url,
         is_available=is_available
@@ -598,7 +688,8 @@ def add_menu_item():
             'name': item.name,
             'description': item.description,
             'price': item.price,
-            'category': item.category,
+            'category': item.category.name if item.category else 'Uncategorized',
+            'category_id': item.category_id,
             'preparation_time': item.preparation_time,
             'image_url': item.image_url,
             'is_available': item.is_available
@@ -612,7 +703,8 @@ def get_menu_item(item_id):
         'name': item.name,
         'description': item.description,
         'price': item.price,
-        'category': item.category,
+        'category': item.category.name if item.category else 'Uncategorized',
+        'category_id': item.category_id,
         'preparation_time': item.preparation_time,
         'image_url': item.image_url,
         'is_available': item.is_available,
@@ -628,7 +720,14 @@ def update_menu_item(item_id):
         item.name = data.get('name', item.name)
         item.description = data.get('description', item.description)
         item.price = data.get('price', item.price)
-        item.category = data.get('category', item.category)
+        # Handle category update
+        if 'category_id' in data:
+            item.category_id = data['category_id']
+        elif 'category' in data:
+            # Try to find category by name for backwards compatibility
+            category = Category.query.filter_by(name=data['category']).first()
+            if category:
+                item.category_id = category.id
         item.preparation_time = data.get('preparation_time', item.preparation_time)
         item.image_url = data.get('image_url', item.image_url)
         item.is_available = data.get('is_available', item.is_available)
@@ -650,7 +749,14 @@ def update_menu_item(item_id):
         item.name = data.get('name', item.name)
         item.description = data.get('description', item.description)
         item.price = float(data['price']) if 'price' in data else item.price
-        item.category = data.get('category', item.category)
+        # Handle category update from form
+        if 'category_id' in data and data['category_id']:
+            item.category_id = int(data['category_id'])
+        elif 'category' in data:
+            # Try to find category by name for backwards compatibility
+            category = Category.query.filter_by(name=data['category']).first()
+            if category:
+                item.category_id = category.id
         item.preparation_time = int(data['preparation_time']) if data.get('preparation_time') else item.preparation_time
         item.is_available = data.get('is_available', 'true').lower() == 'true'
         # Handle file upload
@@ -688,7 +794,8 @@ def update_menu_item(item_id):
             'name': item.name,
             'description': item.description,
             'price': item.price,
-            'category': item.category,
+            'category': item.category.name if item.category else 'Uncategorized',
+            'category_id': item.category_id,
             'preparation_time': item.preparation_time,
             'image_url': item.image_url,
             'is_available': item.is_available
@@ -809,8 +916,8 @@ def handle_orders():
             db.session.add(order_item)
             total_amount += menu_item.price * item_data['quantity']
         order.total_amount = total_amount
-        order.tax_amount = total_amount * 0.1  # 10% tax
-        order.final_amount = total_amount + order.tax_amount
+        order.tax_amount = 0  # No tax
+        order.final_amount = total_amount
         # Update table status if it's a dine-in order
         if order.order_type == 'dine-in' and order.table_id:
             table = Table.query.get(order.table_id)
@@ -855,6 +962,13 @@ def render_receipt(order_id):
     total_paid = sum(p.amount for p in payments)
     balance = (order.final_amount or 0) - total_paid
     return render_template('receipt.html', order=order, payments=payments, total_paid=total_paid, balance=balance)
+
+@app.route('/order/<int:order_id>', methods=['GET'])
+def order_details(order_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    order = Order.query.get_or_404(order_id)
+    return render_template('order_details.html', order=order)
 @app.route('/api/orders/<int:order_id>/payments', methods=['GET', 'POST'])
 def handle_order_payments(order_id):
     order = Order.query.get_or_404(order_id)
@@ -1797,7 +1911,7 @@ def apply_loyalty(order_id):
     discount_value = points_to_redeem * LOYALTY_REDEMPTION_VALUE_PER_POINT
     # Update order totals
     order.discount_amount = (order.discount_amount or 0) + discount_value
-    base_total = (order.total_amount or 0) + (order.tax_amount or 0)
+    base_total = order.total_amount or 0
     order.final_amount = max(0.0, base_total - (order.discount_amount or 0))
     # Deduct points
     customer.loyalty_points = (customer.loyalty_points or 0) - points_to_redeem
@@ -1854,8 +1968,8 @@ def public_create_order():
         db.session.add(OrderItem(order_id=order.id, menu_item_id=menu_item.id, quantity=qty, price=menu_item.price))
         total += (menu_item.price or 0) * qty
     order.total_amount = total
-    order.tax_amount = total * 0.1
-    order.final_amount = order.total_amount + order.tax_amount
+    order.tax_amount = 0
+    order.final_amount = order.total_amount
     db.session.commit()
     return jsonify({'message': 'Order created', 'order_id': order.id, 'final_amount': order.final_amount}), 201
 @app.route('/api/public/pay', methods=['POST'])
@@ -1934,6 +2048,10 @@ def get_inventory_optimization():
 def ai_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    # Check if user has permission to access AI features
+    user = User.query.get(session['user_id'])
+    if not user or not user.has_permission('access_ai'):
+        return render_template('access_denied.html'), 403
     return render_template('ai.html')
 @app.route('/api/ai/context-chat', methods=['POST'])
 def context_chat():
@@ -2040,6 +2158,253 @@ def handle_setting(key):
         db.session.delete(setting)
         db.session.commit()
         return jsonify({'message': 'Setting deleted successfully'}), 200
+# Role Management
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    permissions = db.Column(db.Text, nullable=False)  # JSON string of permissions
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+@app.route('/api/roles', methods=['GET', 'POST'])
+def handle_roles():
+    # Get language from query parameter
+    language = request.args.get('lang', 'en')
+
+    # Role management translations
+    role_translations = {
+        'en': {
+            'role_name_exists': 'Role name already exists',
+            'permission_required': 'At least one permission is required',
+            'role_created': 'Role created successfully',
+            'role_updated': 'Role updated successfully',
+            'role_deleted': 'Role deleted successfully',
+            'cannot_delete_role': 'Cannot delete role. {count} user(s) are currently assigned to this role.'
+        },
+        'ar': {
+            'role_name_exists': 'اسم الدور موجود بالفعل',
+            'permission_required': 'مطلوب إذن واحد على الأقل',
+            'role_created': 'تم إنشاء الدور بنجاح',
+            'role_updated': 'تم تحديث الدور بنجاح',
+            'role_deleted': 'تم حذف الدور بنجاح',
+            'cannot_delete_role': 'لا يمكن حذف الدور. {count} مستخدم(ين) مُعيَّن حاليًا لهذا الدور.'
+        },
+        'tr': {
+            'role_name_exists': 'Rol adı zaten mevcut',
+            'permission_required': 'En az bir izin gerekli',
+            'role_created': 'Rol başarıyla oluşturuldu',
+            'role_updated': 'Rol başarıyla güncellendi',
+            'role_deleted': 'Rol başarıyla silindi',
+            'cannot_delete_role': 'Rol silinemiyor. Şu anda {count} kullanıcı bu role atanmış.'
+        }
+    }
+
+    translations = role_translations.get(language, role_translations['en'])
+
+    if request.method == 'POST':
+        data = request.get_json()
+
+        # Check if role name already exists
+        if Role.query.filter_by(name=data['name']).first():
+            return jsonify({'message': translations['role_name_exists']}), 400
+
+        # Validate permissions
+        permissions = data.get('permissions', [])
+        if not permissions:
+            return jsonify({'message': translations['permission_required']}), 400
+
+        role = Role(
+            name=data['name'],
+            description=data.get('description', ''),
+            permissions=json.dumps(permissions)
+        )
+        db.session.add(role)
+        db.session.commit()
+        return jsonify({
+            'message': translations['role_created'],
+            'role': {
+                'id': role.id,
+                'name': role.name,
+                'description': role.description,
+                'permissions': permissions
+            }
+        }), 201
+
+    elif request.method == 'GET':
+        roles = Role.query.order_by(Role.created_at.desc()).all()
+        return jsonify([{
+            'id': role.id,
+            'name': role.name,
+            'description': role.description,
+            'permissions': json.loads(role.permissions) if role.permissions else []
+        } for role in roles])
+
+@app.route('/api/roles/<role_name>', methods=['GET', 'PUT', 'DELETE'])
+def handle_role(role_name):
+    # Get language from query parameter
+    language = request.args.get('lang', 'en')
+
+    # Role management translations
+    role_translations = {
+        'en': {
+            'role_name_exists': 'Role name already exists',
+            'permission_required': 'At least one permission is required',
+            'role_created': 'Role created successfully',
+            'role_updated': 'Role updated successfully',
+            'role_deleted': 'Role deleted successfully',
+            'cannot_delete_role': 'Cannot delete role. {count} user(s) are currently assigned to this role.'
+        },
+        'ar': {
+            'role_name_exists': 'اسم الدور موجود بالفعل',
+            'permission_required': 'مطلوب إذن واحد على الأقل',
+            'role_created': 'تم إنشاء الدور بنجاح',
+            'role_updated': 'تم تحديث الدور بنجاح',
+            'role_deleted': 'تم حذف الدور بنجاح',
+            'cannot_delete_role': 'لا يمكن حذف الدور. {count} مستخدم(ين) مُعيَّن حاليًا لهذا الدور.'
+        },
+        'tr': {
+            'role_name_exists': 'Rol adı zaten mevcut',
+            'permission_required': 'En az bir izin gerekli',
+            'role_created': 'Rol başarıyla oluşturuldu',
+            'role_updated': 'Rol başarıyla güncellendi',
+            'role_deleted': 'Rol başarıyla silindi',
+            'cannot_delete_role': 'Rol silinemiyor. Şu anda {count} kullanıcı bu role atanmış.'
+        }
+    }
+
+    translations = role_translations.get(language, role_translations['en'])
+    role = Role.query.filter_by(name=role_name).first_or_404()
+
+    if request.method == 'GET':
+        return jsonify({
+            'id': role.id,
+            'name': role.name,
+            'description': role.description,
+            'permissions': json.loads(role.permissions) if role.permissions else []
+        })
+
+    elif request.method == 'PUT':
+        data = request.get_json()
+
+        # Check if new name conflicts with another role
+        if 'name' in data and data['name'] != role_name:
+            existing = Role.query.filter(Role.name == data['name'], Role.id != role.id).first()
+            if existing:
+                return jsonify({'message': translations['role_name_exists']}), 400
+            role.name = data['name']
+
+        if 'description' in data:
+            role.description = data['description']
+
+        if 'permissions' in data:
+            permissions = data['permissions']
+            if not permissions:
+                return jsonify({'message': translations['permission_required']}), 400
+            role.permissions = json.dumps(permissions)
+
+        role.updated_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({
+            'message': translations['role_updated'],
+            'role': {
+                'id': role.id,
+                'name': role.name,
+                'description': role.description,
+                'permissions': json.loads(role.permissions) if role.permissions else []
+            }
+        })
+
+    elif request.method == 'DELETE':
+        # Check if any users are assigned to this role
+        users_with_role = User.query.filter_by(role=role.name).count()
+        if users_with_role > 0:
+            return jsonify({
+                'message': translations['cannot_delete_role'].format(count=users_with_role)
+            }), 400
+
+        db.session.delete(role)
+        db.session.commit()
+        return jsonify({'message': translations['role_deleted']})
+
+# Category Management
+@app.route('/api/categories', methods=['GET', 'POST'])
+def handle_categories():
+    if request.method == 'POST':
+        data = request.get_json()
+        # Check if category name already exists
+        if Category.query.filter_by(name=data['name']).first():
+            return jsonify({'message': 'Category name already exists'}), 400
+        category = Category(
+            name=data['name'],
+            description=data.get('description', ''),
+            display_order=data.get('display_order', 0),
+            is_active=data.get('is_active', True)
+        )
+        db.session.add(category)
+        db.session.commit()
+        return jsonify({
+            'message': 'Category created',
+            'id': category.id,
+            'category': {
+                'id': category.id,
+                'name': category.name,
+                'description': category.description,
+                'display_order': category.display_order,
+                'is_active': category.is_active
+            }
+        }), 201
+    elif request.method == 'GET':
+        categories = Category.query.filter_by(is_active=True).order_by(Category.display_order, Category.name).all()
+        return jsonify([{
+            'id': cat.id,
+            'name': cat.name,
+            'description': cat.description,
+            'display_order': cat.display_order,
+            'is_active': cat.is_active,
+            'item_count': len(cat.menu_items)
+        } for cat in categories])
+@app.route('/api/categories/<int:category_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_category(category_id):
+    category = Category.query.get_or_404(category_id)
+    if request.method == 'GET':
+        return jsonify({
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+            'display_order': category.display_order,
+            'is_active': category.is_active,
+            'item_count': len(category.menu_items)
+        })
+    elif request.method == 'PUT':
+        data = request.get_json()
+        # Check if name conflicts with another category
+        existing = Category.query.filter(Category.name == data['name'], Category.id != category_id).first()
+        if existing:
+            return jsonify({'message': 'Category name already exists'}), 400
+        category.name = data.get('name', category.name)
+        category.description = data.get('description', category.description)
+        category.display_order = data.get('display_order', category.display_order)
+        category.is_active = data.get('is_active', category.is_active)
+        db.session.commit()
+        return jsonify({
+            'message': 'Category updated',
+            'category': {
+                'id': category.id,
+                'name': category.name,
+                'description': category.description,
+                'display_order': category.display_order,
+                'is_active': category.is_active
+            }
+        })
+    elif request.method == 'DELETE':
+        # Check if category has menu items
+        if category.menu_items:
+            return jsonify({'message': 'Cannot delete category with existing menu items. Move or delete items first.'}), 400
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'message': 'Category deleted'})
 # Export Endpoints for Reports (NEW)
 @app.route('/api/reports/export/sales', methods=['GET'])
 def export_sales_report():

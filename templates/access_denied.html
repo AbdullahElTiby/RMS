@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .access-denied-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .access-denied-icon {
+            font-size: 80px;
+            color: #ef4444;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .access-denied-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .access-denied-message {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin-bottom: 40px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .access-denied-details {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .access-denied-details h3 {
+            color: #dc2626;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .access-denied-details p {
+            color: #991b1b;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .access-denied-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+
+        .help-section {
+            margin-top: 50px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 15px;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .help-section h3 {
+            color: #374151;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .help-section ul {
+            text-align: left;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .help-section li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .help-section li::before {
+            content: '•';
+            color: var(--primary-color, #667eea);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .access-denied-title {
+                font-size: 2rem;
+            }
+
+            .access-denied-message {
+                font-size: 1.1rem;
+            }
+
+            .access-denied-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 200px;
+                justify-content: center;
+            }
+
+            .help-section {
+                margin-top: 30px;
+                padding: 20px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="access-denied-container">
+    <div class="access-denied-icon">
+        🚫
+    </div>
+
+    <h1 class="access-denied-title" data-i18n="access_denied">Access Denied</h1>
+
+    <p class="access-denied-message" data-i18n="access_denied_message">
+        You don't have the required permissions to access this resource.
+    </p>
+
+    <div class="access-denied-details">
+        <h3 data-i18n="permission_required">Permission Required</h3>
+        <p data-i18n="cashier_role_required">Cashier role or higher required.</p>
+    </div>
+
+    <div class="access-denied-actions">
+        <a href="/dashboard" class="btn btn-primary">
+            <i class="fas fa-home"></i>
+            <span data-i18n="go_to_dashboard">Go to Dashboard</span>
+        </a>
+        <a href="/login" class="btn btn-secondary">
+            <i class="fas fa-sign-in-alt"></i>
+            <span data-i18n="login_different_user">Login as Different User</span>
+        </a>
+    </div>
+
+    <div class="help-section">
+        <h3 data-i18n="what_can_i_do">What can I do?</h3>
+        <ul>
+            <li data-i18n="contact_admin">Contact your administrator to request the appropriate permissions</li>
+            <li data-i18n="login_different_account">Login with a different account that has the required role</li>
+            <li data-i18n="check_current_role">Check your current role in your profile settings</li>
+            <li data-i18n="return_to_dashboard">Return to the dashboard to access allowed features</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Access Denied Page Translations
+    const accessDeniedTranslations = {
+        en: {
+            access_denied: 'Access Denied',
+            access_denied_message: 'You don\'t have the required permissions to access this resource.',
+            permission_required: 'Permission Required',
+            cashier_role_required: 'Cashier role or higher required.',
+            go_to_dashboard: 'Go to Dashboard',
+            login_different_user: 'Login as Different User',
+            what_can_i_do: 'What can I do?',
+            contact_admin: 'Contact your administrator to request the appropriate permissions',
+            login_different_account: 'Login with a different account that has the required role',
+            check_current_role: 'Check your current role in your profile settings',
+            return_to_dashboard: 'Return to the dashboard to access allowed features'
+        },
+        ar: {
+            access_denied: 'تم رفض الوصول',
+            access_denied_message: 'ليس لديك الصلاحيات المطلوبة للوصول إلى هذا المورد.',
+            permission_required: 'الصلاحية المطلوبة',
+            cashier_role_required: 'مطلوب دور كاشير أو أعلى.',
+            go_to_dashboard: 'الذهاب إلى لوحة التحكم',
+            login_different_user: 'تسجيل الدخول كمستخدم مختلف',
+            what_can_i_do: 'ماذا يمكنني أن أفعل؟',
+            contact_admin: 'اتصل بمدير النظام لطلب الصلاحيات المناسبة',
+            login_different_account: 'تسجيل الدخول بحساب مختلف له الدور المطلوب',
+            check_current_role: 'تحقق من دورك الحالي في إعدادات ملفك الشخصي',
+            return_to_dashboard: 'العودة إلى لوحة التحكم للوصول إلى الميزات المسموحة'
+        }
+    };
+
+    // Translation function
+    function t(key) {
+        const lang = localStorage.getItem('lang') || 'en';
+        return (accessDeniedTranslations[lang] || accessDeniedTranslations.en)[key] || key;
+    }
+
+    // Apply translations
+    function applyTranslations(lang) {
+        const dict = accessDeniedTranslations[lang] || accessDeniedTranslations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                el.textContent = dict[key];
+            }
+        });
+
+        // Set RTL for Arabic
+        if (lang === 'ar') {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.body.style.textAlign = 'right';
+        } else {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.body.style.textAlign = 'left';
+        }
+    }
+
+    // Initialize translations
+    function initTranslations() {
+        const savedLang = localStorage.getItem('lang') || 'en';
+        applyTranslations(savedLang);
+
+        // Listen for language changes
+        window.addEventListener('languageChanged', function(e) {
+            applyTranslations(e.detail.language);
+        });
+    }
+
+    // Add some animation to the icon
+    document.addEventListener('DOMContentLoaded', function() {
+        const icon = document.querySelector('.access-denied-icon');
+        icon.style.animation = 'shake 0.5s ease-in-out';
+
+        // Initialize translations
+        initTranslations();
+    });
+
+    // Shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

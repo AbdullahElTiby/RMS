@@ -350,6 +350,40 @@
         </div>
     </div>
 
+    <!-- Category Management Section -->
+    <div class="category-management-section" style="margin-bottom: 40px; padding: 25px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(255, 255, 255, 0.8);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 2px solid rgba(102, 126, 234, 0.2);">
+            <h2 style="margin: 0; color: #2d3748; font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;" data-i18n="category_management">Category Management</h2>
+            <p style="margin: 0; color: #64748b; font-size: 14px;" data-i18n="category_management_desc">Manage menu categories for organizing your menu items</p>
+        </div>
+
+        <div class="category-form-section" style="margin-bottom: 30px;">
+            <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 1.2rem; font-weight: 600;" data-i18n="add_new_category">Add New Category</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label for="newCategoryName" style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151; font-size: 14px;" data-i18n="category_name">Category Name</label>
+                    <input type="text" id="newCategoryName" data-i18n-placeholder="enter_category_name" placeholder="Enter category name..." style="width: 100%; padding: 10px 12px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 8px; font-size: 14px; transition: all 0.3s ease; background: white;">
+                </div>
+                <div>
+                    <label for="newCategoryDescription" style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151; font-size: 14px;" data-i18n="category_description">Description (optional)</label>
+                    <input type="text" id="newCategoryDescription" data-i18n-placeholder="enter_category_description" placeholder="Enter category description..." style="width: 100%; padding: 10px 12px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 8px; font-size: 14px; transition: all 0.3s ease; background: white;">
+                </div>
+                <div>
+                    <label for="newCategoryOrder" style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151; font-size: 14px;" data-i18n="display_order">Display Order</label>
+                    <input type="number" id="newCategoryOrder" min="0" value="0" style="width: 100%; padding: 10px 12px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 8px; font-size: 14px; transition: all 0.3s ease; background: white;">
+                </div>
+            </div>
+            <button type="button" onclick="addCategory()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease;" data-i18n="add_category">Add Category</button>
+        </div>
+
+        <div class="existing-categories-section">
+            <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 1.2rem; font-weight: 600;" data-i18n="existing_categories">Existing Categories</h3>
+            <div id="categoriesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                <!-- Categories will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <div class="menu-grid" id="menuGrid">
         <!-- Menu items will be loaded here -->
     </div>
@@ -387,13 +421,9 @@
 
                 <div class="form-group">
                     <label for="category" data-i18n="category">Category</label>
-                    <select id="category" name="category" required>
+                    <select id="category" name="category_id" required>
                         <option value="" data-i18n="select_category">Select Category</option>
-                        <option value="appetizer" data-i18n="appetizer">Appetizer</option>
-                        <option value="main" data-i18n="main_course">Main Course</option>
-                        <option value="dessert" data-i18n="dessert">Dessert</option>
-                        <option value="drink" data-i18n="drink">Drink</option>
-                        <option value="side" data-i18n="side_dish">Side Dish</option>
+                        <!-- Categories will be loaded dynamically -->
                     </select>
                 </div>
 
@@ -481,7 +511,27 @@
                 delete: 'Delete',
                 confirm_delete: 'Are you sure you want to delete',
                 yes: 'Yes',
-                no: 'No'
+                no: 'No',
+                category_management: 'Category Management',
+                category_management_desc: 'Manage menu categories for organizing your menu items',
+                add_new_category: 'Add New Category',
+                category_name: 'Category Name',
+                category_description: 'Description (optional)',
+                display_order: 'Display Order',
+                add_category: 'Add Category',
+                existing_categories: 'Existing Categories',
+                enter_category_name: 'Enter category name...',
+                enter_category_description: 'Enter category description...',
+                category_added: 'Category added successfully!',
+                category_updated: 'Category updated successfully!',
+                category_deleted: 'Category deleted successfully!',
+                category_required: 'Category name is required',
+                category_empty: 'Category name cannot be empty',
+                confirm_delete_category: 'Are you sure you want to delete the category',
+                no_categories: 'No categories found. Add your first category above.',
+                enter_new_name: 'Enter new category name:',
+                enter_new_description: 'Enter new description (optional):',
+                enter_display_order: 'Enter display order:'
             },
             ar: {
                 language: 'اللغة',
@@ -520,7 +570,27 @@
                 delete: 'حذف',
                 confirm_delete: 'هل أنت متأكد من حذف',
                 yes: 'نعم',
-                no: 'لا'
+                no: 'لا',
+                category_management: 'إدارة الفئات',
+                category_management_desc: 'إدارة فئات القائمة لتنظيم عناصر القائمة',
+                add_new_category: 'إضافة فئة جديدة',
+                category_name: 'اسم الفئة',
+                category_description: 'الوصف (اختياري)',
+                display_order: 'ترتيب العرض',
+                add_category: 'إضافة فئة',
+                existing_categories: 'الفئات الموجودة',
+                enter_category_name: 'أدخل اسم الفئة...',
+                enter_category_description: 'أدخل وصف الفئة...',
+                category_added: 'تم إضافة الفئة بنجاح!',
+                category_updated: 'تم تحديث الفئة بنجاح!',
+                category_deleted: 'تم حذف الفئة بنجاح!',
+                category_required: 'اسم الفئة مطلوب',
+                category_empty: 'لا يمكن أن يكون اسم الفئة فارغاً',
+                confirm_delete_category: 'هل أنت متأكد من حذف الفئة',
+                no_categories: 'لم يتم العثور على فئات. أضف فئتك الأولى أعلاه.',
+                enter_new_name: 'أدخل اسم الفئة الجديد:',
+                enter_new_description: 'أدخل الوصف الجديد (اختياري):',
+                enter_display_order: 'أدخل ترتيب العرض:'
             },
             tr: {
                 language: 'Dil',
@@ -559,7 +629,27 @@
                 delete: 'Sil',
                 confirm_delete: 'Silmek istediğinize emin misiniz',
                 yes: 'Evet',
-                no: 'Hayır'
+                no: 'Hayır',
+                category_management: 'Kategori Yönetimi',
+                category_management_desc: 'Menü öğelerini organize etmek için menü kategorilerini yönetin',
+                add_new_category: 'Yeni Kategori Ekle',
+                category_name: 'Kategori Adı',
+                category_description: 'Açıklama (isteğe bağlı)',
+                display_order: 'Görüntüleme Sırası',
+                add_category: 'Kategori Ekle',
+                existing_categories: 'Mevcut Kategoriler',
+                enter_category_name: 'Kategori adını girin...',
+                enter_category_description: 'Kategori açıklamasını girin...',
+                category_added: 'Kategori başarıyla eklendi!',
+                category_updated: 'Kategori başarıyla güncellendi!',
+                category_deleted: 'Kategori başarıyla silindi!',
+                category_required: 'Kategori adı gerekli',
+                category_empty: 'Kategori adı boş olamaz',
+                confirm_delete_category: 'Kategoriyi silmek istediğinizden emin misiniz',
+                no_categories: 'Kategori bulunamadı. İlk kategorinizi yukarıdan ekleyin.',
+                enter_new_name: 'Yeni kategori adını girin:',
+                enter_new_description: 'Yeni açıklamayı girin (isteğe bağlı):',
+                enter_display_order: 'Görüntüleme sırasını girin:'
             }
         };
 
@@ -605,6 +695,37 @@
             } catch (error) {
                 console.error('Error loading ingredients:', error);
             }
+        }
+
+        // Load categories for dropdown
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    populateCategoryDropdown(categories);
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Populate category dropdown
+        function populateCategoryDropdown(categories) {
+            const categorySelect = document.getElementById('category');
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            // Clear existing options except the first one
+            categorySelect.innerHTML = `<option value="">${dict.select_category}</option>`;
+
+            // Add category options
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
         }
 
         // Add recipe ingredient row
@@ -701,6 +822,7 @@
             if (!checkAuth()) return;
 
             await loadIngredients();
+            await loadCategories();
             const lang = localStorage.getItem('lang') || 'en';
             const dict = translations[lang] || translations.en;
             document.getElementById('modalTitle').textContent = dict.add_menu_item;
@@ -715,6 +837,7 @@
 
             try {
                 await loadIngredients();
+                await loadCategories();
                 const response = await fetch(`/api/menu/${id}`);
                 if (response.ok) {
                     const item = await response.json();
@@ -752,10 +875,10 @@
             document.getElementById('name').value = item.name;
             document.getElementById('description').value = item.description || '';
             document.getElementById('price').value = item.price;
-            document.getElementById('category').value = item.category;
+            document.getElementById('category').value = item.category_id;
             document.getElementById('preparationTime').value = item.preparation_time || '';
             document.getElementById('isAvailable').checked = item.is_available;
-            
+
             // Show current image preview if exists
             const preview = document.getElementById('imagePreview');
             if (item.image_url) {
@@ -886,9 +1009,185 @@
             }
         };
 
+        // Category Management Functions
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    displayCategories(categories);
+                } else {
+                    console.error('Failed to load categories');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        function displayCategories(categories) {
+            const container = document.getElementById('categoriesList');
+            if (categories.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666; font-style: italic;">No categories found. Add your first category above.</div>';
+                return;
+            }
+
+            container.innerHTML = categories.map(category => `
+                <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(102, 126, 234, 0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 1.1rem; font-weight: 600;">${category.name}</h4>
+                            ${category.description ? `<p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;">${category.description}</p>` : ''}
+                            <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b;">
+                                <span><strong>Order:</strong> ${category.display_order}</span>
+                                <span><strong>Items:</strong> ${category.item_count}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="editCategory(${category.id}, '${category.name}', '${category.description || ''}', ${category.display_order})" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;" type="button">Edit</button>
+                            <button onclick="deleteCategory(${category.id}, '${category.name}', event)" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;" type="button">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addCategory() {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            const name = document.getElementById('newCategoryName').value.trim();
+            const description = document.getElementById('newCategoryDescription').value.trim();
+            const displayOrder = parseInt(document.getElementById('newCategoryOrder').value) || 0;
+
+            if (!name) {
+                alert(dict.category_required);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/categories', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        display_order: displayOrder,
+                        is_active: true
+                    })
+                });
+
+                if (response.ok) {
+                    // Clear form
+                    document.getElementById('newCategoryName').value = '';
+                    document.getElementById('newCategoryDescription').value = '';
+                    document.getElementById('newCategoryOrder').value = '0';
+
+                    // Reload categories and menu items
+                    loadCategories();
+                    loadCategories(); // Reload dropdown in menu form
+                    alert(dict.category_added);
+                } else {
+                    const error = await response.json();
+                    alert('Error adding category: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Error adding category: ' + error.message);
+            }
+        }
+
+        function editCategory(id, currentName, currentDescription, currentOrder) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            const newName = prompt(dict.enter_new_name, currentName);
+            if (newName === null) return;
+
+            const newDescription = prompt(dict.enter_new_description, currentDescription);
+            if (newDescription === null) return;
+
+            const newOrder = prompt(dict.enter_display_order, currentOrder);
+            if (newOrder === null) return;
+
+            updateCategory(id, newName.trim(), newDescription.trim(), parseInt(newOrder) || 0);
+        }
+
+        async function updateCategory(id, name, description, displayOrder) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (!name.trim()) {
+                alert(dict.category_empty);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/categories/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        display_order: displayOrder,
+                        is_active: true
+                    })
+                });
+
+                if (response.ok) {
+                    loadCategories();
+                    loadCategories(); // Reload dropdown in menu form
+                    alert(dict.category_updated);
+                } else {
+                    const error = await response.json();
+                    alert('Error updating category: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating category:', error);
+                alert('Error updating category: ' + error.message);
+            }
+        }
+
+        async function deleteCategory(id, name, event) {
+            // Prevent form submission
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const lang = localStorage.getItem('lang') || 'en';
+            const dict = translations[lang] || translations.en;
+
+            if (!confirm(`${dict.confirm_delete_category} "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/categories/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadCategories();
+                    loadCategories(); // Reload dropdown in menu form
+                    alert(dict.category_deleted);
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting category: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting category:', error);
+                alert('Error deleting category: ' + error.message);
+            }
+        }
+
         // Initialize
         checkAuth();
         initI18n();
         loadMenuItems();
+        loadCategories(); // Load categories for the management section
 </script>
 {% endblock %}

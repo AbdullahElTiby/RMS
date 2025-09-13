@@ -46,8 +46,6 @@
             </tbody>
         </table>
         <div class="totals">
-            <div><span>Subtotal</span><span>${{ '%.2f'|format(order.total_amount or 0) }}</span></div>
-            <div><span>Tax</span><span>${{ '%.2f'|format(order.tax_amount or 0) }}</span></div>
             <div><strong>Total</strong><strong>${{ '%.2f'|format(order.final_amount or 0) }}</strong></div>
             <div><span>Paid</span><span>${{ '%.2f'|format(total_paid or 0) }}</span></div>
             <div><span>Balance</span><span>${{ '%.2f'|format(balance or 0) }}</span></div>
@@ -71,5 +69,3 @@
     </div>
 </body>
 </html>
-
-

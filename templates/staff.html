@@ -313,18 +313,8 @@
                 <div class="form-group">
                     <label for="role" data-i18n="role">Role</label>
                     <select id="role" required>
-                        <option value="">${t('select_role')}</option>
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
-                        <option value="head_chef">Head Chef</option>
-                        <option value="chef">Chef</option>
-                        <option value="sous_chef">Sous Chef</option>
-                        <option value="bartender">Bartender</option>
-                        <option value="waiter">Waiter</option>
-                        <option value="cashier">Cashier</option>
-                        <option value="host">Host</option>
-                        <option value="delivery_driver">Delivery Driver</option>
-                        <option value="cleaner">Cleaner</option>
+                        <option value="" data-i18n="select_role">Select Role</option>
+                        <!-- Roles will be loaded dynamically -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -346,6 +336,9 @@
     </div>
 
 <script>
+    // Global variable to store roles
+    let availableRoles = [];
+
     async function checkAuth() {
         if (!localStorage.getItem('user')) {
             window.location.href = '/login';
@@ -354,11 +347,75 @@
         return true;
     }
 
+    async function loadRoles() {
+        try {
+            // Get current language from localStorage
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const response = await fetch(`/api/roles?lang=${currentLang}`);
+            if (response.ok) {
+                const roles = await response.json();
+                availableRoles = roles;
+                populateRoleDropdown();
+            } else {
+                console.error('Failed to load roles, using default roles');
+                // Fallback to system roles if API fails
+                availableRoles = [
+                    { name: 'admin', description: 'Administrator' },
+                    { name: 'manager', description: 'Manager' },
+                    { name: 'head_chef', description: 'Head Chef' },
+                    { name: 'chef', description: 'Chef' },
+                    { name: 'sous_chef', description: 'Sous Chef' },
+                    { name: 'bartender', description: 'Bartender' },
+                    { name: 'waiter', description: 'Waiter' },
+                    { name: 'cashier', description: 'Cashier' },
+                    { name: 'host', description: 'Host' },
+                    { name: 'delivery_driver', description: 'Delivery Driver' },
+                    { name: 'cleaner', description: 'Cleaner' }
+                ];
+                populateRoleDropdown();
+            }
+        } catch (error) {
+            console.error('Error loading roles:', error);
+            // Fallback to system roles
+            availableRoles = [
+                { name: 'admin', description: 'Administrator' },
+                { name: 'manager', description: 'Manager' },
+                { name: 'head_chef', description: 'Head Chef' },
+                { name: 'chef', description: 'Chef' },
+                { name: 'sous_chef', description: 'Sous Chef' },
+                { name: 'bartender', description: 'Bartender' },
+                { name: 'waiter', description: 'Waiter' },
+                { name: 'cashier', description: 'Cashier' },
+                { name: 'host', description: 'Host' },
+                { name: 'delivery_driver', description: 'Delivery Driver' },
+                { name: 'cleaner', description: 'Cleaner' }
+            ];
+            populateRoleDropdown();
+        }
+    }
+
+    function populateRoleDropdown() {
+        const roleSelect = document.getElementById('role');
+        // Clear existing options except the first one
+        roleSelect.innerHTML = '<option value="" data-i18n="select_role">Select Role</option>';
+
+        // Add roles from the API
+        availableRoles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role.name;
+            option.textContent = `${role.name.replace('_', ' ')} (${role.description || 'Custom Role'})`;
+            option.setAttribute('data-custom-role', 'true');
+            roleSelect.appendChild(option);
+        });
+    }
+
     async function loadStaff() {
         if (!await checkAuth()) return;
-        
+
         try {
-            const response = await fetch('/api/staff');
+            // Get current language from localStorage
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const response = await fetch(`/api/staff?lang=${currentLang}`);
             const staff = await response.json();
             displayStaff(staff);
         } catch (error) {
@@ -429,9 +486,11 @@
 
     async function editStaff(id) {
         try {
-            const response = await fetch(`/api/staff/${id}`);
+            // Get current language from localStorage
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const response = await fetch(`/api/staff/${id}?lang=${currentLang}`);
             const staff = await response.json();
-            
+
             document.getElementById('modalTitle').textContent = t('edit_staff');
             document.getElementById('staffId').value = staff.id;
             document.getElementById('firstName').value = staff.first_name;
@@ -443,7 +502,7 @@
             document.getElementById('isActive').checked = staff.is_active;
             document.getElementById('password').required = false;
             document.getElementById('password').placeholder = t('password_placeholder');
-            
+
             document.getElementById('staffModal').style.display = 'block';
         } catch (error) {
             console.error('Error loading staff:', error);
@@ -497,12 +556,14 @@
 
     async function toggleStaffStatus(id, active) {
         try {
-            const response = await fetch(`/api/staff/${id}`, {
+            // Get current language from localStorage
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const response = await fetch(`/api/staff/${id}?lang=${currentLang}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_active: active })
             });
-            
+
             if (response.ok) {
                 loadStaff();
             } else {
@@ -545,6 +606,10 @@
     }
 
     // Initial load
-    document.addEventListener('DOMContentLoaded', () => { initI18n(); loadStaff(); });
+    document.addEventListener('DOMContentLoaded', () => {
+        initI18n();
+        loadRoles(); // Load roles first
+        loadStaff(); // Then load staff
+    });
 </script>
 {% endblock %}

@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+{% block title %}Order Details - RMS{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .page-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .header h1 {
+            color: #2d3748;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
+        }
+        .order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        .info-card h3 {
+            color: #2d3748;
+            margin: 0 0 20px 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .info-card h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            border-radius: 2px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .info-value {
+            color: #6b7280;
+            text-align: right;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        .status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+        .status-confirmed { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
+        .status-completed { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .status-cancelled { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .status-cooking { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .status-ready { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .status-served { background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%); }
+        .order-items {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .order-items h3 {
+            color: #2d3748;
+            margin: 0 0 25px 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .order-items h3::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            border-radius: 2px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .item-row:last-child {
+            border-bottom: none;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .item-details {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .item-price {
+            font-weight: 600;
+            color: #667eea;
+            text-align: right;
+        }
+        .totals-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .totals-row.final {
+            font-size: 18px;
+            font-weight: 700;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+            padding-top: 15px;
+            margin-top: 15px;
+            color: #2d3748;
+        }
+        .payments-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .payments-section h3 {
+            color: #2d3748;
+            margin: 0 0 25px 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .payments-section h3::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
+            border-radius: 2px;
+        }
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .payment-row:last-child {
+            border-bottom: none;
+        }
+        .payment-info {
+            flex: 1;
+        }
+        .payment-method {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .payment-date {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .payment-amount {
+            font-weight: 600;
+            color: #10b981;
+            text-align: right;
+        }
+        .no-data {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .page-content {
+                padding: 20px;
+            }
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            .order-info {
+                grid-template-columns: 1fr;
+            }
+            .item-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .item-price {
+                text-align: left;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="header">
+            <h1 data-i18n="order_details">Order Details</h1>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <a href="/orders" class="btn btn-secondary" data-i18n="back_to_orders">Back to Orders</a>
+                <a href="/receipt/{{ order.id }}" target="_blank" class="btn btn-primary" data-i18n="print_receipt">Print Receipt</a>
+            </div>
+        </div>
+
+        <div class="order-info">
+            <!-- Order Information -->
+            <div class="info-card">
+                <h3 data-i18n="order_information">Order Information</h3>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="order_id">Order ID:</span>
+                    <span class="info-value">#{{ order.id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="order_type">Order Type:</span>
+                    <span class="info-value" data-i18n="{{ order.order_type }}">{{ order.order_type|title }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="status">Status:</span>
+                    <span class="status-badge status-{{ order.status }}">{{ order.status|title }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="created_at">Created At:</span>
+                    <span class="info-value">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                {% if order.completed_at %}
+                <div class="info-row">
+                    <span class="info-label" data-i18n="completed_at">Completed At:</span>
+                    <span class="info-value">{{ order.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                {% endif %}
+                {% if order.notes %}
+                <div class="info-row">
+                    <span class="info-label" data-i18n="order_notes">Order Notes:</span>
+                    <span class="info-value">{{ order.notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Customer Information -->
+            {% if order.customer %}
+            <div class="info-card">
+                <h3 data-i18n="customer_information">Customer Information</h3>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="name">Name:</span>
+                    <span class="info-value">{{ order.customer.first_name }} {{ order.customer.last_name }}</span>
+                </div>
+                {% if order.customer.email %}
+                <div class="info-row">
+                    <span class="info-label" data-i18n="email">Email:</span>
+                    <span class="info-value">{{ order.customer.email }}</span>
+                </div>
+                {% endif %}
+                {% if order.customer.phone %}
+                <div class="info-row">
+                    <span class="info-label" data-i18n="phone">Phone:</span>
+                    <span class="info-value">{{ order.customer.phone }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label" data-i18n="loyalty_points">Loyalty Points:</span>
+                    <span class="info-value">{{ order.customer.loyalty_points or 0 }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="total_orders">Total Orders:</span>
+                    <span class="info-value">{{ order.customer.total_orders or 0 }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="info-card">
+                <h3 data-i18n="customer_information">Customer Information</h3>
+                <div class="no-data" data-i18n="guest_customer">Guest Customer</div>
+            </div>
+            {% endif %}
+
+            <!-- Table Information -->
+            {% if order.table %}
+            <div class="info-card">
+                <h3 data-i18n="table_information">Table Information</h3>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="table_number">Table Number:</span>
+                    <span class="info-value">{{ order.table.table_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="capacity">Capacity:</span>
+                    <span class="info-value">{{ order.table.capacity }} seats</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="location">Location:</span>
+                    <span class="info-value">{{ order.table.location|title }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Order Items -->
+        <div class="order-items">
+            <h3 data-i18n="order_items">Order Items</h3>
+            {% for item in order.items %}
+            <div class="item-row">
+                <div class="item-info">
+                    <div class="item-name">{{ item.menu_item.name }}</div>
+                    <div class="item-details">
+                        <span data-i18n="quantity">Quantity:</span> {{ item.quantity }} × ₺{{ "%.2f"|format(item.price) }}
+                        {% if item.special_instructions %}
+                        <br><span data-i18n="special_instructions">Special Instructions:</span> {{ item.special_instructions }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item-price">₺{{ "%.2f"|format(item.price * item.quantity) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Order Totals -->
+        <div class="totals-section">
+            <div class="totals-row">
+                <span data-i18n="subtotal">Subtotal:</span>
+                <span>₺{{ "%.2f"|format(order.total_amount or 0) }}</span>
+            </div>
+            {% if order.tax_amount %}
+            <div class="totals-row">
+                <span data-i18n="tax">Tax:</span>
+                <span>₺{{ "%.2f"|format(order.tax_amount) }}</span>
+            </div>
+            {% endif %}
+            {% if order.discount_amount %}
+            <div class="totals-row">
+                <span data-i18n="discount">Discount:</span>
+                <span>-₺{{ "%.2f"|format(order.discount_amount) }}</span>
+            </div>
+            {% endif %}
+            <div class="totals-row final">
+                <span data-i18n="total">Total:</span>
+                <span>₺{{ "%.2f"|format(order.final_amount or 0) }}</span>
+            </div>
+        </div>
+
+        <!-- Payment Information -->
+        {% if order.payments %}
+        <div class="payments-section">
+            <h3 data-i18n="payment_history">Payment History</h3>
+            {% for payment in order.payments %}
+            <div class="payment-row">
+                <div class="payment-info">
+                    <div class="payment-method">{{ payment.payment_method|title }}</div>
+                    <div class="payment-date">{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                    {% if payment.transaction_id %}
+                    <div style="color: #6b7280; font-size: 12px;">{{ payment.transaction_id }}</div>
+                    {% endif %}
+                </div>
+                <div class="payment-amount">₺{{ "%.2f"|format(payment.amount) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // i18n translations
+    const translations = {
+        en: {
+            order_details: 'Order Details',
+            back_to_orders: 'Back to Orders',
+            print_receipt: 'Print Receipt',
+            order_information: 'Order Information',
+            order_id: 'Order ID:',
+            order_type: 'Order Type:',
+            status: 'Status:',
+            created_at: 'Created At:',
+            completed_at: 'Completed At:',
+            customer_information: 'Customer Information',
+            name: 'Name:',
+            email: 'Email:',
+            phone: 'Phone:',
+            loyalty_points: 'Loyalty Points:',
+            total_orders: 'Total Orders:',
+            table_information: 'Table Information',
+            table_number: 'Table Number:',
+            capacity: 'Capacity:',
+            location: 'Location:',
+            guest_customer: 'Guest Customer',
+            order_notes: 'Order Notes:',
+            order_items: 'Order Items',
+            quantity: 'Quantity:',
+            special_instructions: 'Special Instructions:',
+            subtotal: 'Subtotal:',
+            tax: 'Tax:',
+            discount: 'Discount:',
+            total: 'Total:',
+            payment_history: 'Payment History'
+        },
+        ar: {
+            order_details: 'تفاصيل الطلب',
+            back_to_orders: 'العودة للطلبات',
+            print_receipt: 'طباعة الفاتورة',
+            order_information: 'معلومات الطلب',
+            order_id: 'رقم الطلب:',
+            order_type: 'نوع الطلب:',
+            status: 'الحالة:',
+            created_at: 'تاريخ الإنشاء:',
+            completed_at: 'تاريخ الإكمال:',
+            customer_information: 'معلومات العميل',
+            name: 'الاسم:',
+            email: 'البريد الإلكتروني:',
+            phone: 'الهاتف:',
+            loyalty_points: 'نقاط الولاء:',
+            total_orders: 'إجمالي الطلبات:',
+            table_information: 'معلومات الطاولة',
+            table_number: 'رقم الطاولة:',
+            capacity: 'السعة:',
+            location: 'الموقع:',
+            guest_customer: 'عميل زائر',
+            order_notes: 'ملاحظات الطلب:',
+            order_items: 'عناصر الطلب',
+            quantity: 'الكمية:',
+            special_instructions: 'تعليمات خاصة:',
+            subtotal: 'المجموع الفرعي:',
+            tax: 'الضريبة:',
+            discount: 'الخصم:',
+            total: 'المجموع:',
+            payment_history: 'تاريخ الدفع'
+        },
+        tr: {
+            order_details: 'Sipariş Detayları',
+            back_to_orders: 'Siparişlere Dön',
+            print_receipt: 'Fişi Yazdır',
+            order_information: 'Sipariş Bilgileri',
+            order_id: 'Sipariş No:',
+            order_type: 'Sipariş Türü:',
+            status: 'Durum:',
+            created_at: 'Oluşturulma:',
+            completed_at: 'Tamamlanma:',
+            customer_information: 'Müşteri Bilgileri',
+            name: 'Ad:',
+            email: 'E-posta:',
+            phone: 'Telefon:',
+            loyalty_points: 'Sadakat Puanları:',
+            total_orders: 'Toplam Sipariş:',
+            table_information: 'Masa Bilgileri',
+            table_number: 'Masa Numarası:',
+            capacity: 'Kapasite:',
+            location: 'Konum:',
+            guest_customer: 'Misafir Müşteri',
+            order_notes: 'Sipariş Notları:',
+            order_items: 'Sipariş Öğeleri',
+            quantity: 'Miktar:',
+            special_instructions: 'Özel Talimatlar:',
+            subtotal: 'Ara Toplam:',
+            tax: 'Vergi:',
+            discount: 'İndirim:',
+            total: 'Toplam:',
+            payment_history: 'Ödeme Geçmişi'
+        }
+    };
+
+    function t(key) {
+        const lang = localStorage.getItem('lang') || 'en';
+        return (translations[lang] || translations.en)[key] || key;
+    }
+
+    function applyTranslations(lang) {
+        const dict = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) el.textContent = dict[key];
+        });
+        document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+        document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+    }
+
+    // Apply translations on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('lang') || 'en';
+        applyTranslations(saved);
+
+        // Listen for global language changes
+        window.addEventListener('languageChanged', (event) => {
+            applyTranslations(event.detail.language);
+        });
+    });
+</script>
+{% endblock %}

@@ -130,37 +130,7 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
-        .demo-credentials {
-            margin-top: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 12px;
-            font-size: 14px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-        .demo-credentials h4 {
-            margin: 0 0 15px 0;
-            color: #2d3748;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .demo-credentials ul {
-            margin: 0;
-            padding-left: 0;
-            list-style: none;
-        }
-        .demo-credentials li {
-            margin-bottom: 8px;
-            color: #64748b;
-            padding: 8px 12px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-        .demo-credentials strong {
-            color: #667eea;
-        }
+
     </style>
 </head>
 <body>
@@ -187,16 +157,6 @@
                 Invalid username or password
             </div>
         </form>
-        
-        <div class="demo-credentials">
-            <h4 data-i18n="demo_credentials">Demo Credentials:</h4>
-            <ul>
-                <li><strong data-i18n="admin_role">Admin:</strong> admin / admin123</li>
-                <li><strong data-i18n="manager_role">Manager:</strong> manager / manager123</li>
-                <li><strong data-i18n="chef_role">Chef:</strong> chef / chef123</li>
-                <li><strong data-i18n="waiter_role">Waiter:</strong> waiter / waiter123</li>
-            </ul>
-        </div>
     </div>
 
     <script>
@@ -209,12 +169,7 @@
                 username: 'Username',
                 password: 'Password',
                 sign_in: 'Sign In',
-                invalid_credentials: 'Invalid username or password',
-                demo_credentials: 'Demo Credentials:',
-                admin_role: 'Admin:',
-                manager_role: 'Manager:',
-                chef_role: 'Chef:',
-                waiter_role: 'Waiter:'
+                invalid_credentials: 'Invalid username or password'
             },
             ar: {
                 app_title: 'نظام إدارة المطاعم - تسجيل الدخول',
@@ -223,12 +178,7 @@
                 username: 'اسم المستخدم',
                 password: 'كلمة المرور',
                 sign_in: 'تسجيل الدخول',
-                invalid_credentials: 'اسم المستخدم أو كلمة المرور غير صحيحة',
-                demo_credentials: 'بيانات الدخول التجريبية:',
-                admin_role: 'المدير:',
-                manager_role: 'المدير:',
-                chef_role: 'الطاهي:',
-                waiter_role: 'النادل:'
+                invalid_credentials: 'اسم المستخدم أو كلمة المرور غير صحيحة'
             },
             tr: {
                 app_title: 'RMS - Giriş',
@@ -237,12 +187,7 @@
                 username: 'Kullanıcı Adı',
                 password: 'Şifre',
                 sign_in: 'Giriş Yap',
-                invalid_credentials: 'Geçersiz kullanıcı adı veya şifre',
-                demo_credentials: 'Demo Bilgileri:',
-                admin_role: 'Yönetici:',
-                manager_role: 'Müdür:',
-                chef_role: 'Aşçı:',
-                waiter_role: 'Garson:'
+                invalid_credentials: 'Geçersiz kullanıcı adı veya şifre'
             }
         };
 
