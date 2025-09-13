@@ -635,10 +635,6 @@
                 <span data-i18n="subtotal">Subtotal:</span>
                 <span id="subtotal">₺0.00</span>
             </div>
-            <div class="total-row">
-                <span data-i18n="tax">Tax (10%):</span>
-                <span id="tax">₺0.00</span>
-            </div>
             <div class="total-row final">
                 <span data-i18n="total">Total:</span>
                 <span id="total">₺0.00</span>
@@ -895,12 +891,10 @@
 
         // Calculate totals
         const subtotal = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.1;
-        const total = subtotal + tax;
+        const total = subtotal;
 
         // Update totals display
         document.getElementById('subtotal').textContent = `₺${subtotal.toFixed(2)}`;
-        document.getElementById('tax').textContent = `₺${tax.toFixed(2)}`;
         document.getElementById('total').textContent = `₺${total.toFixed(2)}`;
 
         orderTotalsDiv.style.display = 'block';
