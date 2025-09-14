@@ -36,8 +36,8 @@ A comprehensive, full-featured restaurant management system built with Flask and
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd restaurant-management-system
+   git clone https://github.com/AbdullahElTiby/RMS.git
+   cd RMS
    ```
 
 2. **Create a virtual environment**
@@ -48,11 +48,11 @@ A comprehensive, full-featured restaurant management system built with Flask and
 
 3. **Install dependencies**
    ```bash
-   pip install -r backend/requirements.txt
+   pip install -r requirements.txt
    ```
 
 4. **Set up environment variables**
-   Create a `.env` file in the backend directory:
+   Create a `.env` file in the root directory:
    ```env
    FLASK_APP=app.py
    FLASK_ENV=development
@@ -61,7 +61,6 @@ A comprehensive, full-featured restaurant management system built with Flask and
 
 5. **Initialize the database**
    ```bash
-   cd backend
    python init_db.py
    ```
 
@@ -131,30 +130,47 @@ Customers can view the menu and place orders at `/our-menu`.
 ## Project Structure
 
 ```
-backend/
+RMS/
 ├── app.py                 # Main Flask application
 ├── ai_service.py          # AI/ML service integration
 ├── check_inventory.py     # Inventory checking utilities
 ├── check_transactions.py  # Transaction verification
 ├── config.py             # Configuration settings
+├── db_migration.py        # Database migration utilities
 ├── init_db.py            # Database initialization
+├── migrate_categories.py  # Category migration script
 ├── run.py                # Application runner
 ├── setup_ai.py           # AI service setup
 ├── test_api.py           # API testing utilities
 ├── update_costs.py       # Cost update utilities
 ├── requirements.txt      # Python dependencies
+├── README.md             # Project documentation
+├── LICENSE               # License file
+├── .gitignore            # Git ignore rules
 ├── instance/             # Database files
 ├── uploads/              # File uploads
 │   └── images/           # Menu item images
 └── templates/            # HTML templates
+    ├── base.html         # Base template
     ├── index.html        # Dashboard
     ├── login.html        # Login page
     ├── menu.html         # Menu management
     ├── orders.html       # Order management
+    ├── order_details.html # Order details
     ├── inventory.html    # Inventory management
     ├── kitchen.html      # Kitchen display
     ├── cashier.html      # Cashier interface
-    └── ...
+    ├── customers.html    # Customer management
+    ├── staff.html        # Staff management
+    ├── staff_schedule.html # Staff scheduling
+    ├── tables.html       # Table management
+    ├── reservations.html # Reservation system
+    ├── reports.html      # Reports and analytics
+    ├── settings.html     # System settings
+    ├── public_menu.html  # Public menu for customers
+    ├── receipt.html      # Receipt template
+    ├── ai.html           # AI insights interface
+    └── access_denied.html # Access denied page
 ```
 
 ## Configuration
