@@ -266,6 +266,148 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .page-content {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .filter-controls .form-group {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-card h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .export-buttons button {
+                width: 100%;
+            }
+
+            .chart-container {
+                padding: 15px;
+            }
+
+            .analytics-insight-card {
+                padding: 15px;
+            }
+
+            .analytics-insight-card h3 {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-content {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .data-table {
+                font-size: 11px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 6px 4px;
+            }
+
+            /* Make tables horizontally scrollable on very small screens */
+            .data-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .analytics-insight-card {
+                padding: 12px;
+            }
+
+            .analytics-metric {
+                font-size: 14px;
+            }
+
+            .analytics-metric-label {
+                font-size: 13px;
+            }
+
+            .analytics-metric-value {
+                font-size: 15px;
+            }
+        }
+
+        /* Tablet specific adjustments */
+        @media (min-width: 481px) and (max-width: 767px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .analytics-insight-card {
+                grid-column: span 1;
+            }
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -440,6 +582,22 @@
             <div class="stat-card">
                 <h3 data-i18n="analytics_low_stock_items">Low Stock Items</h3>
                 <div class="stat-value" id="analytics-low-stock">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="total_orders_today">Total Orders Today</h3>
+                <div class="stat-value" id="analytics-today-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="current_revenue">Current Revenue</h3>
+                <div class="stat-value" id="analytics-today-revenue">₺0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="active_reservations">Active Reservations</h3>
+                <div class="stat-value" id="analytics-active-reservations">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-i18n="table_utilization">Table Utilization</h3>
+                <div class="stat-value" id="analytics-table-utilization">0%</div>
             </div>
         </div>
 
@@ -807,6 +965,23 @@
             document.getElementById('analytics-loyalty-points').textContent = overviewData.customers.loyalty_points || 0;
             document.getElementById('analytics-avg-order').textContent = `$${(overviewData.revenue.average_order || 0).toFixed(2)}`;
             document.getElementById('analytics-low-stock').textContent = overviewData.inventory.low_stock || 0;
+
+            // Load today's data
+            const todaySalesResponse = await fetch('/api/reports/sales?start_date=' + new Date().toISOString().split('T')[0]);
+            const todaySales = await todaySalesResponse.json();
+            const reservationsResponse = await fetch('/api/reservations');
+            const reservations = await reservationsResponse.json();
+            const tablesResponse = await fetch('/api/tables');
+            const tables = await tablesResponse.json();
+
+            document.getElementById('analytics-today-orders').textContent = todaySales.total_orders || 0;
+            document.getElementById('analytics-today-revenue').textContent = '₺' + (todaySales.total_sales || 0).toFixed(2);
+            document.getElementById('analytics-active-reservations').textContent = Array.isArray(reservations) ? reservations.length : 0;
+
+            const totalTables = tables.length;
+            const occupiedTables = tables.filter(table => table.status === 'occupied').length;
+            const utilizationRate = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
+            document.getElementById('analytics-table-utilization').textContent = utilizationRate + '%';
 
             // Load revenue trends
             const revenueResponse = await fetch('/api/analytics/revenue-trends');

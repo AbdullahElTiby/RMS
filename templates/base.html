@@ -424,7 +424,7 @@
             }
         }
 
-        /* Responsive adjustments */
+        /* Enhanced Responsive adjustments */
         @media (max-width: 768px) {
             .ai-chat-popup {
                 width: calc(100vw - 40px);
@@ -470,6 +470,44 @@
                 padding: 12px;
                 font-size: 14px;
             }
+
+            /* Make tables responsive */
+            .orders-table, .data-table {
+                font-size: 12px;
+            }
+
+            .orders-table th, .orders-table td,
+            .data-table th, .data-table td {
+                padding: 8px 4px;
+            }
+
+            /* Stack form elements vertically on mobile */
+            .filter-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .filter-controls .form-group {
+                width: 100%;
+            }
+
+            /* Adjust modal sizes for mobile */
+            .modal-content {
+                margin: 10px;
+                width: calc(100vw - 20px);
+                max-width: none;
+            }
+
+            /* Make buttons stack on mobile */
+            .form-actions, .header-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
         }
 
         @media (max-width: 480px) {
@@ -489,6 +527,7 @@
 
             body {
                 padding: 5px;
+                font-size: 13px;
             }
 
             .page-content {
@@ -496,11 +535,94 @@
             }
 
             h1 {
-                font-size: 1.5em;
+                font-size: 1.3em;
+                margin-bottom: 15px;
+            }
+
+            h2 {
+                font-size: 1.2em;
             }
 
             .stats {
+                font-size: 18px;
+            }
+
+            /* Further reduce table sizes */
+            .orders-table th, .orders-table td,
+            .data-table th, .data-table td {
+                padding: 6px 2px;
+                font-size: 11px;
+            }
+
+            /* Make cards more compact */
+            .card {
+                padding: 12px;
+            }
+
+            .stat-card h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .stat-value {
                 font-size: 20px;
+            }
+
+            /* Adjust grid gaps */
+            .stats-grid, .menu-grid {
+                gap: 10px;
+            }
+
+            /* Make form inputs more touch-friendly */
+            .form-group input, .form-group select, .form-group textarea {
+                padding: 12px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            /* Adjust button sizes */
+            .btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
+
+        /* Tablet specific adjustments */
+        @media (min-width: 481px) and (max-width: 767px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        /* Landscape mobile adjustments */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .sidebar {
+                height: 100vh;
+                overflow-y: auto;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .ai-chat-widget {
+                bottom: 5px;
+                right: 5px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .ai-chat-popup {
+                height: calc(100vh - 60px);
+                bottom: 50px;
             }
         }
     </style>
@@ -523,21 +645,79 @@
 
             <nav class="sidebar-nav">
                 <a href="/dashboard" class="sidebar-link" data-i18n="dashboard">Dashboard</a>
-                <a href="/menu" class="sidebar-link" data-i18n="menu_management">Menu Management</a>
-                <a href="/orders" class="sidebar-link" data-i18n="pos_orders">POS & Orders</a>
-                <a href="/cashier" class="sidebar-link" data-i18n="cashier">Cashier</a>
-                <a href="/inventory" class="sidebar-link" data-i18n="inventory">Inventory</a>
-                <a href="/reservations" class="sidebar-link" data-i18n="reservations">Reservations</a>
-                <a href="/tables" class="sidebar-link" data-i18n="table_management">Table Management</a>
-                <a href="/staff" class="sidebar-link" data-i18n="staff_management">Staff Management</a>
-                <a href="/staff_schedule" class="sidebar-link" data-i18n="staff_schedule">Staff Schedule</a>
-                <a href="/kitchen" class="sidebar-link" data-i18n="kitchen_display">Kitchen Display</a>
-                <a href="/reports" class="sidebar-link" data-i18n="reports">Reports</a>
-                <a href="/customers" class="sidebar-link" data-i18n="customers">Customers</a>
-                {% if session.get('role') in ['admin', 'manager'] %}
-                <a href="/settings" class="sidebar-link" data-i18n="settings"> Settings</a>
+                {% if session.get('user_id') %}
+                    {% set user_permissions = [] %}
+                    {% if session.get('role') == 'admin' %}
+                        {% set user_permissions = ['manage_all', 'view_reports', 'manage_staff', 'manage_menu', 'manage_inventory', 'manage_reservations', 'manage_tables', 'manage_customers', 'manage_settings', 'access_ai'] %}
+                    {% elif session.get('role') == 'manager' %}
+                        {% set user_permissions = ['view_reports', 'manage_staff', 'manage_menu', 'manage_inventory', 'manage_reservations', 'manage_tables', 'manage_customers', 'manage_settings', 'access_ai'] %}
+                    {% elif session.get('role') == 'head_chef' %}
+                        {% set user_permissions = ['manage_kitchen', 'view_kitchen_reports', 'manage_inventory'] %}
+                    {% elif session.get('role') == 'chef' %}
+                        {% set user_permissions = ['manage_kitchen', 'view_kitchen_reports'] %}
+                    {% elif session.get('role') == 'sous_chef' %}
+                        {% set user_permissions = ['manage_kitchen'] %}
+                    {% elif session.get('role') == 'bartender' %}
+                        {% set user_permissions = ['manage_bar', 'view_bar_reports'] %}
+                    {% elif session.get('role') == 'waiter' %}
+                        {% set user_permissions = ['take_orders', 'view_table_status', 'manage_orders'] %}
+                    {% elif session.get('role') == 'cashier' %}
+                        {% set user_permissions = ['process_payments', 'view_sales', 'manage_orders'] %}
+                    {% elif session.get('role') == 'host' %}
+                        {% set user_permissions = ['manage_reservations', 'view_table_status'] %}
+                    {% elif session.get('role') == 'delivery_driver' %}
+                        {% set user_permissions = ['manage_deliveries', 'view_delivery_orders'] %}
+                    {% endif %}
+
+                    {% if 'manage_menu' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/menu" class="sidebar-link" data-i18n="menu_management">Menu Management</a>
+                    {% endif %}
+
+                    {% if 'manage_orders' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/orders" class="sidebar-link" data-i18n="pos_orders">POS & Orders</a>
+                    {% endif %}
+
+                    {% if 'process_payments' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/cashier" class="sidebar-link" data-i18n="cashier">Cashier</a>
+                    {% endif %}
+
+                    {% if 'manage_inventory' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/inventory" class="sidebar-link" data-i18n="inventory">Inventory</a>
+                    {% endif %}
+
+                    {% if 'manage_reservations' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/reservations" class="sidebar-link" data-i18n="reservations">Reservations</a>
+                    {% endif %}
+
+                    {% if 'manage_tables' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/tables" class="sidebar-link" data-i18n="table_management">Table Management</a>
+                    {% endif %}
+
+                    {% if 'manage_staff' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/staff" class="sidebar-link" data-i18n="staff_management">Staff Management</a>
+                        <a href="/staff_schedule" class="sidebar-link" data-i18n="staff_schedule">Staff Schedule</a>
+                    {% endif %}
+
+                    {% if 'manage_kitchen' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/kitchen" class="sidebar-link" data-i18n="kitchen_display">Kitchen Display</a>
+                    {% endif %}
+
+                    {% if 'view_reports' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/reports" class="sidebar-link" data-i18n="reports">Reports</a>
+                    {% endif %}
+
+                    {% if 'manage_customers' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/customers" class="sidebar-link" data-i18n="customers">Customers</a>
+                    {% endif %}
+
+                    {% if 'manage_settings' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/settings" class="sidebar-link" data-i18n="settings"> Settings</a>
+                    {% endif %}
+
+                    {% if 'access_ai' in user_permissions or 'manage_all' in user_permissions %}
+                        <a href="/ai" class="sidebar-link ai-link" data-i18n="ai_assistant">🤖 AI Assistant</a>
+                    {% endif %}
                 {% endif %}
-                <a href="/ai" class="sidebar-link ai-link" data-i18n="ai_assistant">🤖 AI Assistant</a>
             </nav>
         </div>
 

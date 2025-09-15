@@ -153,41 +153,210 @@
             opacity: 1;
             transform: scale(1.2);
         }
+
+        /* Mobile responsiveness for dashboard */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 15px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-top: 30px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .card h3 {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+
+            .stats {
+                font-size: 2rem;
+            }
+
+            .module-links {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-top: 30px;
+            }
+
+            .module-link {
+                padding: 18px;
+                font-size: 0.95rem;
+            }
+
+            .alerts-section {
+                margin-top: 25px;
+            }
+
+            .alerts-section h3 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            .alert {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            /* Header responsiveness */
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .dashboard-header .user-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .dashboard-header .logout-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 12px;
+            }
+
+            .dashboard {
+                gap: 15px;
+                margin-top: 25px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .card h3 {
+                font-size: 0.95rem;
+                margin-bottom: 10px;
+            }
+
+            .stats {
+                font-size: 1.8rem;
+            }
+
+            .module-links {
+                gap: 12px;
+                margin-top: 25px;
+            }
+
+            .module-link {
+                padding: 16px;
+                font-size: 0.9rem;
+                border-radius: 10px;
+            }
+
+            .alerts-section h3 {
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+
+            .alert {
+                padding: 8px 10px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+
+            .alert-dismissible .close {
+                font-size: 16px;
+                top: 2px;
+                right: 8px;
+            }
+
+            /* Better touch targets for mobile */
+            .module-link {
+                min-height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .alert-dismissible .close {
+                min-width: 24px;
+                min-height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Tablet specific adjustments */
+        @media (min-width: 481px) and (max-width: 767px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .module-links {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Landscape mobile adjustments */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .main-content {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+
+            .dashboard {
+                margin-top: 20px;
+                gap: 15px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .module-links {
+                margin-top: 20px;
+                gap: 10px;
+            }
+
+            .module-link {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1 data-i18n="dashboard_title">Dashboard</h1>
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
                 <span data-i18n="welcome">Welcome</span>, <strong id="user-name">User</strong>
-                <a href="/logout" id="logoutBtn" style="background: #dc3545; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)';" data-i18n="logout">Logout</a>
+                <a href="/logout" class="logout-btn" style="background: #dc3545; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)';" data-i18n="logout">Logout</a>
             </div>
         </div>
 
-        <div class="dashboard">
-            <div class="card">
-                <h3 data-i18n="total_orders_today">Total Orders Today</h3>
-                <div class="stats" id="orders-today">0</div>
-            </div>
-            <div class="card">
-                <h3 data-i18n="current_revenue">Current Revenue</h3>
-                <div class="stats" id="current-revenue">₺0.00</div>
-            </div>
-            <div class="card">
-                <h3 data-i18n="low_stock_items">Low Stock Items</h3>
-                <div class="stats" id="low-stock">0</div>
-            </div>
-            <div class="card">
-                <h3 data-i18n="active_reservations">Active Reservations</h3>
-                <div class="stats" id="active-reservations">0</div>
-            </div>
-            <div class="card">
-                <h3 data-i18n="table_utilization">Table Utilization</h3>
-                <div class="stats" id="table-utilization">0%</div>
-            </div>
-        </div>
+
 
         <!-- Notification Alerts Section -->
         <div class="alerts-section" style="margin-top: 30px;">
@@ -222,30 +391,8 @@
     async function fetchDashboardData() {
         try {
             const currentLang = localStorage.getItem('lang') || 'en';
-            const responses = await Promise.all([
-                fetch('/api/reports/sales?start_date=' + new Date().toISOString().split('T')[0]),
-                fetch('/api/inventory/low-stock'),
-                fetch('/api/reservations'),
-                fetch('/api/tables'),
-                fetch('/api/notifications/alerts?lang=' + currentLang)
-            ]);
-
-            const [salesData, lowStockData, reservationsData, tablesData, alertsData] = await Promise.all(
-                responses.map(res => res.json())
-            );
-
-            document.getElementById('orders-today').textContent = salesData.total_orders || 0;
-            document.getElementById('current-revenue').textContent = '₺' + (salesData.total_sales || 0).toFixed(2);
-            document.getElementById('low-stock').textContent = Array.isArray(lowStockData) ? lowStockData.length : 0;
-            document.getElementById('active-reservations').textContent = Array.isArray(reservationsData) ? reservationsData.length : 0;
-
-            // Calculate and display table utilization
-            if (Array.isArray(tablesData)) {
-                const totalTables = tablesData.length;
-                const occupiedTables = tablesData.filter(table => table.status === 'occupied').length;
-                const utilizationRate = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
-                document.getElementById('table-utilization').textContent = utilizationRate + '%';
-            }
+            const alertsResponse = await fetch('/api/notifications/alerts?lang=' + currentLang);
+            const alertsData = await alertsResponse.json();
 
             // Display alerts
             displayAlerts(alertsData.alerts || []);

@@ -773,6 +773,17 @@
                                 </div>
                             </div>
                             <div class="permission-group">
+                                <h5 data-i18n="kitchen_permissions">Kitchen Permissions</h5>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="perm_manage_kitchen" name="permissions" value="manage_kitchen">
+                                    <label for="perm_manage_kitchen" data-i18n="manage_kitchen">Access Kitchen Display</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="perm_view_kitchen_reports" name="permissions" value="view_kitchen_reports">
+                                    <label for="perm_view_kitchen_reports" data-i18n="view_kitchen_reports">View Kitchen Reports</label>
+                                </div>
+                            </div>
+                            <div class="permission-group">
                                 <h5 data-i18n="system_permissions">System Permissions</h5>
                                 <div class="checkbox-group">
                                     <input type="checkbox" id="perm_manage_settings" name="permissions" value="manage_settings">
@@ -790,8 +801,12 @@
 
                 <div class="setting-group">
                     <h4 data-i18n="existing_roles">Existing Roles</h4>
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" onclick="loadRoles()" class="btn-save" style="font-size: 12px; padding: 8px 16px;">Refresh Roles</button>
+                    </div>
                     <div id="rolesList" class="roles-list">
                         <!-- Roles will be loaded here -->
+                        <p style="text-align: center; color: #6b7280; padding: 20px;">Loading roles...</p>
                     </div>
                 </div>
             </div>
@@ -1111,7 +1126,10 @@
             export_reports: 'Export Reports',
             system_permissions: 'System Permissions',
             manage_settings: 'Manage Settings',
-            system_admin: 'System Administrator'
+            system_admin: 'System Administrator',
+            kitchen_permissions: 'Kitchen Permissions',
+            manage_kitchen: 'Access Kitchen Display',
+            view_kitchen_reports: 'View Kitchen Reports'
         },
         ar: {
             settings: 'الإعدادات',
@@ -1826,15 +1844,41 @@
     });
 
     // Role Management Functions
+    let isLoadingRoles = false;
+
     async function loadRoles() {
+        if (isLoadingRoles) return; // Prevent multiple simultaneous loads
+
+        isLoadingRoles = true;
+        console.log('Loading roles...');
+
         try {
             // Get current language from localStorage
             const currentLang = localStorage.getItem('lang') || 'en';
-            const response = await fetch(`/api/roles?lang=${currentLang}`);
+            const apiUrl = `/api/roles?lang=${currentLang}`;
+            console.log('Fetching from:', apiUrl);
+
+            const response = await fetch(apiUrl);
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (!response.ok) {
+                console.error('Failed to load roles:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                displayRoles([]); // Show empty list if API fails
+                return;
+            }
+
             const roles = await response.json();
+            console.log('Roles loaded:', roles);
             displayRoles(roles);
         } catch (error) {
             console.error('Error loading roles:', error);
+            displayRoles([]); // Show empty list on error
+        } finally {
+            isLoadingRoles = false;
         }
     }
 

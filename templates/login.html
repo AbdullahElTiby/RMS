@@ -21,9 +21,11 @@
             padding: 50px;
             border-radius: 20px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             animation: slideIn 0.5s ease-out;
+            box-sizing: border-box;
         }
         @keyframes slideIn {
             from {
@@ -129,6 +131,80 @@
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+                align-items: flex-start;
+                padding-top: 50px;
+            }
+
+            .login-container {
+                padding: 30px;
+                margin: 0;
+                width: 100%;
+                max-width: none;
+                border-radius: 15px;
+            }
+
+            .login-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .login-header p {
+                font-size: 0.9rem;
+            }
+
+            .form-group input {
+                padding: 14px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .btn-login {
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                padding-top: 30px;
+            }
+
+            .login-container {
+                padding: 25px;
+                border-radius: 12px;
+            }
+
+            .login-header {
+                margin-bottom: 30px;
+            }
+
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group input {
+                padding: 12px;
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 15px;
+            }
+
+            .error-message {
+                font-size: 13px;
+                padding: 10px;
+                margin-top: 15px;
+            }
         }
 
     </style>

@@ -238,6 +238,76 @@
             padding-top: 20px;
             border-top: 1px solid rgba(0,0,0,0.1);
         }
+
+        /* Mobile responsive table */
+        @media (max-width: 768px) {
+            .orders-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .orders-table th,
+            .orders-table td {
+                padding: 8px 6px;
+                font-size: 12px;
+                min-width: 80px;
+            }
+
+            .orders-table th:nth-child(1),
+            .orders-table td:nth-child(1) {
+                min-width: 60px;
+            }
+
+            .orders-table th:nth-child(6),
+            .orders-table td:nth-child(6) {
+                min-width: 120px;
+            }
+
+            .orders-table th:nth-child(7),
+            .orders-table td:nth-child(7) {
+                min-width: 150px;
+            }
+
+            /* Stack action buttons vertically on very small screens */
+            .orders-table td:last-child {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                align-items: flex-start;
+            }
+
+            .orders-table td:last-child button,
+            .orders-table td:last-child a {
+                width: 100%;
+                text-align: center;
+                font-size: 11px;
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .orders-table th,
+            .orders-table td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+
+            .orders-table th:nth-child(2),
+            .orders-table td:nth-child(2),
+            .orders-table th:nth-child(3),
+            .orders-table td:nth-child(3),
+            .orders-table th:nth-child(4),
+            .orders-table td:nth-child(4) {
+                display: none; /* Hide less important columns on very small screens */
+            }
+
+            .orders-table th:nth-child(5),
+            .orders-table td:nth-child(5) {
+                font-weight: bold;
+                color: #667eea;
+            }
+        }
     </style>
 {% endblock %}
 

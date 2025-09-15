@@ -273,7 +273,10 @@
 
     <!-- Inventory Transactions Section -->
     <div class="transactions-section">
-        <h2 data-i18n="inventory_transactions">Inventory Transactions</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 data-i18n="inventory_transactions">Inventory Transactions</h2>
+            <button class="btn btn-primary" onclick="exportInventoryTransactionsReport()" data-i18n="export_inventory_transactions">Export Inventory Transactions</button>
+        </div>
         <table class="inventory-table" id="transactionsTable">
             <thead>
                 <tr>
@@ -600,12 +603,73 @@
         }
     }
 
+    function showLoading() {
+        // Create loading overlay if it doesn't exist
+        let overlay = document.getElementById('loadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.innerHTML = `
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p data-i18n="exporting_report">Exporting report...</p>
+                </div>
+            `;
+            overlay.style.cssText = `
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                z-index: 9999;
+                align-items: center;
+                justify-content: center;
+            `;
+            document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    function exportInventoryTransactionsReport() {
+        showLoading();
+        fetch('/api/reports/export/inventory-transactions')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inventory_transactions_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                hideLoading();
+                alert(t('export_failed') || 'Export failed. Please try again.');
+            });
+    }
+
     // Initial Load
     // i18n
     const translations = {
-        en: { inventory: 'Inventory', language: 'Language', back_to_dashboard: 'Back to Dashboard', add_ingredient: 'Add New Ingredient', ingredient: 'Ingredient', current_stock: 'Current Stock', unit: 'Unit', min_stock: 'Min. Stock', status: 'Status', actions: 'Actions', ingredient_name: 'Ingredient Name', unit_label: 'Unit (e.g., kg, L, pieces)', min_stock_level: 'Minimum Stock Level', cost_per_unit: 'Cost per Unit (₺)', total_cost: 'Total Cost:', cancel: 'Cancel', save_ingredient: 'Save Ingredient', restock_ingredient: 'Restock Ingredient', restocking: 'Restocking:', quantity_to_add: 'Quantity to Add', add_stock: 'Add Stock', restock: 'Restock', edit: 'Edit', remove: 'Remove', edit_ingredient: 'Edit Ingredient', confirm_remove_ingredient: 'Are you sure you want to remove this ingredient?', inventory_transactions: 'Inventory Transactions', transaction_type: 'Type', quantity: 'Quantity', cost: 'Cost', transaction_date: 'Date', notes: 'Notes', related_order: 'Order ID', failed_to_load_inventory: 'Failed to load inventory.', failed_to_load_transactions: 'Failed to load transactions.', no_ingredients_found: 'No ingredients found.', no_transactions_found: 'No transactions found.', status_low: 'Low', status_adequate: 'Adequate', status_critical: 'Critical', transaction_type_waste: 'Waste', transaction_type_purchase: 'Purchase', transaction_type_usage: 'Usage', transaction_type_adjustment: 'Adjustment', spoil: 'Spoil', spoil_ingredient: 'Spoil Ingredient', spoil_quantity: 'Quantity to Spoil', spoil_reason: 'Reason for Spoilage', spoil_full_stock: 'Spoil Full Stock', spoil_partial_stock: 'Spoil Partial Stock', spoil_all_stock: 'Spoil All Stock', confirm_spoil: 'Are you sure you want to spoil this ingredient?', spoil_success: 'Ingredient spoiled successfully', spoil_error: 'Error spoiling ingredient' },
-        ar: { inventory: 'المخزون', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', add_ingredient: 'إضافة مكوّن جديد', ingredient: 'المكوّن', current_stock: 'المخزون الحالي', unit: 'الوحدة', min_stock: 'الحد الأدنى', status: 'الحالة', actions: 'الإجراءات', ingredient_name: 'اسم المكوّن', unit_label: 'الوحدة (مثل كجم، لتر، قطع)', min_stock_level: 'الحد الأدنى للمخزون', cost_per_unit: 'التكلفة للوحدة (₺)', total_cost: 'التكلفة الإجمالية:', cancel: 'إلغاء', save_ingredient: 'حفظ المكوّن', restock_ingredient: 'تعبئة المكوّن', restocking: 'جاري التعبئة:', quantity_to_add: 'الكمية المراد إضافتها', add_stock: 'إضافة للمخزون', restock: 'تعبئة', edit: 'تعديل', remove: 'إزالة', edit_ingredient: 'تعديل المكوّن', confirm_remove_ingredient: 'هل أنت متأكد من إزالة هذا المكوّن؟', inventory_transactions: 'حركات المخزون', transaction_type: 'النوع', quantity: 'الكمية', cost: 'التكلفة', transaction_date: 'التاريخ', notes: 'الملاحظات', related_order: 'رقم الطلب', failed_to_load_inventory: 'فشل تحميل المخزون.', failed_to_load_transactions: 'فشل تحميل الحركات.', no_ingredients_found: 'لم يتم العثور على مكونات.', no_transactions_found: 'لم يتم العثور على حركات.', status_low: 'منخفض', status_adequate: 'كافي', status_critical: 'حرج', transaction_type_waste: 'نفايات', transaction_type_purchase: 'شراء', transaction_type_usage: 'استخدام', transaction_type_adjustment: 'تعديل', spoil: 'إفساد', spoil_ingredient: 'إفساد المكوّن', spoil_quantity: 'الكمية المراد إفسادها', spoil_reason: 'سبب الإفساد', spoil_full_stock: 'إفساد المخزون بالكامل', spoil_partial_stock: 'إفساد جزء من المخزون', spoil_all_stock: 'إفساد كل المخزون', confirm_spoil: 'هل أنت متأكد من إفساد هذا المكوّن؟', spoil_success: 'تم إفساد المكوّن بنجاح', spoil_error: 'خطأ في إفساد المكوّن' },
-        tr: { inventory: 'Stok', language: 'Dil', back_to_dashboard: 'Panele Dön', add_ingredient: 'Yeni Malzeme Ekle', ingredient: 'Malzeme', current_stock: 'Mevcut Stok', unit: 'Birim', min_stock: 'Asgari Stok', status: 'Durum', actions: 'İşlemler', ingredient_name: 'Malzeme Adı', unit_label: 'Birim (örn. kg, L, adet)', min_stock_level: 'Asgari Stok Seviyesi', cost_per_unit: 'Birim Maliyet (₺)', total_cost: 'Toplam Maliyet:', cancel: 'İptal', save_ingredient: 'Malzemeyi Kaydet', restock_ingredient: 'Malzeme Yenile', restocking: 'Yenileniyor:', quantity_to_add: 'Eklenecek Miktar', add_stock: 'Stok Ekle', restock: 'Yenile', edit: 'Düzenle', remove: 'Kaldır', edit_ingredient: 'Malzemeyi Düzenle', confirm_remove_ingredient: 'Bu malzemeyi kaldırmak istediğinizden emin misiniz?', inventory_transactions: 'Stok Hareketleri', transaction_type: 'Tür', quantity: 'Miktar', cost: 'Maliyet', transaction_date: 'Tarih', notes: 'Notlar', related_order: 'Sipariş ID', failed_to_load_inventory: 'Stok yüklenemedi.', failed_to_load_transactions: 'Hareketler yüklenemedi.', no_ingredients_found: 'Malzeme bulunamadı.', no_transactions_found: 'Hareket bulunamadı.', status_low: 'Düşük', status_adequate: 'Yeterli', status_critical: 'Kritik', transaction_type_waste: 'İsraf', transaction_type_purchase: 'Satın Alma', transaction_type_usage: 'Kullanım', transaction_type_adjustment: 'Düzenleme', spoil: 'Boz', spoil_ingredient: 'Malzemeyi Boz', spoil_quantity: 'Bozulacak Miktar', spoil_reason: 'Bozulma Nedeni', spoil_full_stock: 'Tüm Stoğu Boz', spoil_partial_stock: 'Stoğun Bir Kısmını Boz', spoil_all_stock: 'Tüm Stoğu Boz', confirm_spoil: 'Bu malzemeyi bozmak istediğinizden emin misiniz?', spoil_success: 'Malzeme başarıyla bozuldu', spoil_error: 'Malzeme bozulurken hata oluştu' }
+        en: { inventory: 'Inventory', language: 'Language', back_to_dashboard: 'Back to Dashboard', add_ingredient: 'Add New Ingredient', ingredient: 'Ingredient', current_stock: 'Current Stock', unit: 'Unit', min_stock: 'Min. Stock', status: 'Status', actions: 'Actions', ingredient_name: 'Ingredient Name', unit_label: 'Unit (e.g., kg, L, pieces)', min_stock_level: 'Minimum Stock Level', cost_per_unit: 'Cost per Unit (₺)', total_cost: 'Total Cost:', cancel: 'Cancel', save_ingredient: 'Save Ingredient', restock_ingredient: 'Restock Ingredient', restocking: 'Restocking:', quantity_to_add: 'Quantity to Add', add_stock: 'Add Stock', restock: 'Restock', edit: 'Edit', remove: 'Remove', edit_ingredient: 'Edit Ingredient', confirm_remove_ingredient: 'Are you sure you want to remove this ingredient?', inventory_transactions: 'Inventory Transactions', transaction_type: 'Type', quantity: 'Quantity', cost: 'Cost', transaction_date: 'Date', notes: 'Notes', related_order: 'Order ID', failed_to_load_inventory: 'Failed to load inventory.', failed_to_load_transactions: 'Failed to load transactions.', no_ingredients_found: 'No ingredients found.', no_transactions_found: 'No transactions found.', status_low: 'Low', status_adequate: 'Adequate', status_critical: 'Critical', transaction_type_waste: 'Waste', transaction_type_purchase: 'Purchase', transaction_type_usage: 'Usage', transaction_type_adjustment: 'Adjustment', spoil: 'Spoil', spoil_ingredient: 'Spoil Ingredient', spoil_quantity: 'Quantity to Spoil', spoil_reason: 'Reason for Spoilage', spoil_full_stock: 'Spoil Full Stock', spoil_partial_stock: 'Spoil Partial Stock', spoil_all_stock: 'Spoil All Stock', confirm_spoil: 'Are you sure you want to spoil this ingredient?', spoil_success: 'Ingredient spoiled successfully', spoil_error: 'Error spoiling ingredient', export_inventory_transactions: 'Export Inventory Transactions', exporting_report: 'Exporting report...', export_failed: 'Export failed. Please try again.' },
+        ar: { inventory: 'المخزون', language: 'اللغة', back_to_dashboard: 'العودة للوحة التحكم', add_ingredient: 'إضافة مكوّن جديد', ingredient: 'المكوّن', current_stock: 'المخزون الحالي', unit: 'الوحدة', min_stock: 'الحد الأدنى', status: 'الحالة', actions: 'الإجراءات', ingredient_name: 'اسم المكوّن', unit_label: 'الوحدة (مثل كجم، لتر، قطع)', min_stock_level: 'الحد الأدنى للمخزون', cost_per_unit: 'التكلفة للوحدة (₺)', total_cost: 'التكلفة الإجمالية:', cancel: 'إلغاء', save_ingredient: 'حفظ المكوّن', restock_ingredient: 'تعبئة المكوّن', restocking: 'جاري التعبئة:', quantity_to_add: 'الكمية المراد إضافتها', add_stock: 'إضافة للمخزون', restock: 'تعبئة', edit: 'تعديل', remove: 'إزالة', edit_ingredient: 'تعديل المكوّن', confirm_remove_ingredient: 'هل أنت متأكد من إزالة هذا المكوّن؟', inventory_transactions: 'حركات المخزون', transaction_type: 'النوع', quantity: 'الكمية', cost: 'التكلفة', transaction_date: 'التاريخ', notes: 'الملاحظات', related_order: 'رقم الطلب', failed_to_load_inventory: 'فشل تحميل المخزون.', failed_to_load_transactions: 'فشل تحميل الحركات.', no_ingredients_found: 'لم يتم العثور على مكونات.', no_transactions_found: 'لم يتم العثور على حركات.', status_low: 'منخفض', status_adequate: 'كافي', status_critical: 'حرج', transaction_type_waste: 'نفايات', transaction_type_purchase: 'شراء', transaction_type_usage: 'استخدام', transaction_type_adjustment: 'تعديل', spoil: 'إفساد', spoil_ingredient: 'إفساد المكوّن', spoil_quantity: 'الكمية المراد إفسادها', spoil_reason: 'سبب الإفساد', spoil_full_stock: 'إفساد المخزون بالكامل', spoil_partial_stock: 'إفساد جزء من المخزون', spoil_all_stock: 'إفساد كل المخزون', confirm_spoil: 'هل أنت متأكد من إفساد هذا المكوّن؟', spoil_success: 'تم إفساد المكوّن بنجاح', spoil_error: 'خطأ في إفساد المكوّن', export_inventory_transactions: 'تصدير حركات المخزون', exporting_report: 'جاري تصدير التقرير...', export_failed: 'فشل التصدير. يرجى المحاولة مرة أخرى.' },
+        tr: { inventory: 'Stok', language: 'Dil', back_to_dashboard: 'Panele Dön', add_ingredient: 'Yeni Malzeme Ekle', ingredient: 'Malzeme', current_stock: 'Mevcut Stok', unit: 'Birim', min_stock: 'Asgari Stok', status: 'Durum', actions: 'İşlemler', ingredient_name: 'Malzeme Adı', unit_label: 'Birim (örn. kg, L, adet)', min_stock_level: 'Asgari Stok Seviyesi', cost_per_unit: 'Birim Maliyet (₺)', total_cost: 'Toplam Maliyet:', cancel: 'İptal', save_ingredient: 'Malzemeyi Kaydet', restock_ingredient: 'Malzeme Yenile', restocking: 'Yenileniyor:', quantity_to_add: 'Eklenecek Miktar', add_stock: 'Stok Ekle', restock: 'Yenile', edit: 'Düzenle', remove: 'Kaldır', edit_ingredient: 'Malzemeyi Düzenle', confirm_remove_ingredient: 'Bu malzemeyi kaldırmak istediğinizden emin misiniz?', inventory_transactions: 'Stok Hareketleri', transaction_type: 'Tür', quantity: 'Miktar', cost: 'Maliyet', transaction_date: 'Tarih', notes: 'Notlar', related_order: 'Sipariş ID', failed_to_load_inventory: 'Stok yüklenemedi.', failed_to_load_transactions: 'Hareketler yüklenemedi.', no_ingredients_found: 'Malzeme bulunamadı.', no_transactions_found: 'Hareket bulunamadı.', status_low: 'Düşük', status_adequate: 'Yeterli', status_critical: 'Kritik', transaction_type_waste: 'İsraf', transaction_type_purchase: 'Satın Alma', transaction_type_usage: 'Kullanım', transaction_type_adjustment: 'Düzenleme', spoil: 'Boz', spoil_ingredient: 'Malzemeyi Boz', spoil_quantity: 'Bozulacak Miktar', spoil_reason: 'Bozulma Nedeni', spoil_full_stock: 'Tüm Stoğu Boz', spoil_partial_stock: 'Stoğun Bir Kısmını Boz', spoil_all_stock: 'Tüm Stoğu Boz', confirm_spoil: 'Bu malzemeyi bozmak istediğinizden emin misiniz?', spoil_success: 'Malzeme başarıyla bozuldu', spoil_error: 'Malzeme bozulurken hata oluştu', export_inventory_transactions: 'Stok Hareketlerini Dışa Aktar', exporting_report: 'Rapor dışa aktarılıyor...', export_failed: 'Dışa aktarma başarısız oldu. Lütfen tekrar deneyin.' }
     };
     function t(key){ const lang = localStorage.getItem('lang') || 'en'; return (translations[lang]||translations.en)[key]||key; }
     function applyTranslations(lang) {

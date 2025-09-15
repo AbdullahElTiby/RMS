@@ -420,10 +420,6 @@ def tables_management():
 def kitchen_display():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    # Check if user has permission to access kitchen
-    user = User.query.get(session['user_id'])
-    if not user or not user.has_permission('manage_kitchen'):
-        return render_template('access_denied.html'), 403
     return render_template('kitchen.html')
 @app.route('/cashier')
 def cashier_page():
@@ -2565,11 +2561,11 @@ def export_customer_report():
     """Export customer data as CSV"""
     # Get all customers
     customers = Customer.query.all()
-    
+
     # Create CSV content
     import csv
     from io import StringIO
-    
+
     si = StringIO()
     cw = csv.writer(si)
     # Write header
@@ -2584,9 +2580,45 @@ def export_customer_report():
             f"${c.total_spent:.2f}" if c.total_spent else "$0.00",
             c.loyalty_points or 0
         ])
-    
+
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=customer_report.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
+@app.route('/api/reports/export/inventory-transactions', methods=['GET'])
+def export_inventory_transactions_report():
+    """Export inventory transactions data as CSV"""
+    # Get all inventory transactions
+    transactions = InventoryTransaction.query.order_by(InventoryTransaction.transaction_date.desc()).all()
+
+    # Create CSV content
+    import csv
+    from io import StringIO
+
+    si = StringIO()
+    cw = csv.writer(si)
+    # Write header
+    cw.writerow(['Ingredient', 'Transaction Type', 'Quantity', 'Cost', 'Date', 'Notes', 'Order ID'])
+    # Write data
+    for t in transactions:
+        ingredient_name = t.ingredient.name if t.ingredient else 'Unknown'
+        cost_display = f"${t.total_cost:.2f}" if t.total_cost else '-'
+        date_display = t.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if t.transaction_date else '-'
+        order_id = t.related_order_id if t.related_order_id else '-'
+
+        cw.writerow([
+            ingredient_name,
+            t.transaction_type.title(),
+            t.quantity,
+            cost_display,
+            date_display,
+            t.notes or '-',
+            order_id
+        ])
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=inventory_transactions_report.csv"
     output.headers["Content-type"] = "text/csv"
     return output
 
