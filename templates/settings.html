@@ -544,6 +544,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="main-content">
 <div class="settings-container">
     <div class="settings-header">
         <h1 data-i18n="settings">Settings</h1>
@@ -824,7 +825,6 @@
 
         <div class="settings-actions">
             <button type="submit" class="btn-save" data-i18n="save_settings">Save Settings</button>
-            <button type="button" class="btn-reset" onclick="resetSettings()" data-i18n="reset_to_defaults">Reset to Defaults</button>
         </div>
     </form>
 </div>
@@ -861,7 +861,7 @@
         </form>
     </div>
 </div>
-
+</div>
 {% endblock %}
 
 {% block scripts %}
