@@ -122,6 +122,21 @@ class User(db.Model):
             'cleaner': ['view_cleaning_schedule']
         }
 
+        # Aliases: allow read/edit capabilities to open corresponding pages
+        permission_aliases = {
+            'manage_menu': ['manage_menu', 'view_menu', 'edit_menu', 'manage_categories'],
+            'manage_orders': ['manage_orders', 'view_orders', 'take_orders'],
+            'manage_inventory': ['manage_inventory', 'view_inventory'],
+            'manage_staff': ['manage_staff', 'view_staff'],
+            'manage_reservations': ['manage_reservations'],
+            'manage_tables': ['manage_tables', 'view_table_status'],
+            'process_payments': ['process_payments', 'view_sales'],
+            'view_reports': ['view_reports', 'export_reports'],
+            'manage_customers': ['manage_customers'],
+            'manage_settings': ['manage_settings', 'system_admin'],
+            'manage_kitchen': ['manage_kitchen', 'view_kitchen_reports'],
+        }
+
         # Check system role permissions first
         if self.role in system_role_permissions:
             if 'manage_all' in system_role_permissions[self.role] or required_permission in system_role_permissions[self.role]:
@@ -132,7 +147,12 @@ class User(db.Model):
             db_role = Role.query.filter_by(name=self.role).first()
             if db_role and db_role.permissions:
                 permissions = json.loads(db_role.permissions)
-                return required_permission in permissions
+                # Exact match
+                if required_permission in permissions:
+                    return True
+                # Alias match (read/edit still grants page entry)
+                allowed = permission_aliases.get(required_permission, [required_permission])
+                return any(p in permissions for p in allowed)
         except:
             pass
 

@@ -689,6 +689,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <script>
+        window.currentUserRole = "{{ session.get('role') or '' }}";
+    </script>
     <!-- Mobile sidebar toggle -->
     <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -1162,16 +1165,16 @@
                         localStorage.setItem('lang', selectedLang);
                         updateAILanguage(selectedLang);
                         if (selectedLang === 'ar') {
-                            document.documentElement.setAttribute('dir', 'rtl');
-                            document.body.style.textAlign = 'right';
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.body.style.textAlign = 'right';
                             langToggle.textContent = 'ps العربية';
                         } else if (selectedLang === 'tr') {
                             document.documentElement.setAttribute('dir', 'ltr');
                             document.body.style.textAlign = 'left';
                             langToggle.textContent = 'tr Türkçe';
-                        } else {
-                            document.documentElement.setAttribute('dir', 'ltr');
-                            document.body.style.textAlign = 'left';
+                } else {
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.body.style.textAlign = 'left';
                             langToggle.textContent = 'us English';
                         }
                         window.dispatchEvent(new CustomEvent('languageChanged', {
@@ -1246,11 +1249,72 @@
             });
         }
 
+        // Show/hide links for custom roles using API permissions
+        async function applyCustomRolePermissions() {
+            const role = window.currentUserRole || '';
+            const fixedRoles = ['admin','manager','head_chef','chef','sous_chef','bartender','waiter','cashier','host','delivery_driver'];
+            if (!role || fixedRoles.includes(role)) return;
+            try {
+                const currentLang = localStorage.getItem('lang') || 'en';
+                const res = await fetch(`/api/roles/${role}?lang=${currentLang}`, { cache: 'no-store' });
+                if (!res.ok) return;
+                const roleData = await res.json();
+                const perms = new Set((roleData.permissions || []).map(String));
+                const linkRules = [
+                    { href: '/menu', i18nKey: 'menu_management', any: ['view_menu','edit_menu','manage_categories','manage_menu'] },
+                    { href: '/orders', i18nKey: 'pos_orders', any: ['take_orders','view_orders','manage_orders'] },
+                    { href: '/cashier', i18nKey: 'cashier', any: ['process_payments','view_sales'] },
+                    { href: '/inventory', i18nKey: 'inventory', any: ['view_inventory','manage_inventory'] },
+                    { href: '/reservations', i18nKey: 'reservations', any: ['manage_reservations'] },
+                    { href: '/tables', i18nKey: 'table_management', any: ['manage_tables','view_table_status'] },
+                    { href: '/staff', i18nKey: 'staff_management', any: ['manage_staff','view_staff'] },
+                    { href: '/staff_schedule', i18nKey: 'staff_schedule', any: ['manage_staff'] },
+                    { href: '/kitchen', i18nKey: 'kitchen_display', any: ['manage_kitchen','view_kitchen_reports'] },
+                    { href: '/reports', i18nKey: 'reports', any: ['view_reports','export_reports'] },
+                    { href: '/customers', i18nKey: 'customers', any: ['manage_customers'] },
+                    { href: '/settings', i18nKey: 'settings', any: ['manage_settings','system_admin'] },
+                    { href: '/ai', i18nKey: 'ai_assistant', any: ['access_ai'] },
+                ];
+
+                const nav = document.querySelector('.sidebar-nav');
+                // Hide any existing links initially (except dashboard)
+                linkRules.forEach(rule => {
+                    const el = nav ? nav.querySelector(`a[href="${rule.href}"]`) : null;
+                    if (el) el.style.display = 'none';
+                });
+
+                // Ensure a link element exists for each rule
+                const uiTrans = (typeof uiTranslations !== 'undefined') ? (uiTranslations[currentLang] || uiTranslations.en) : {};
+                linkRules.forEach(rule => {
+                    let el = nav ? nav.querySelector(`a[href="${rule.href}"]`) : null;
+                    if (!el && nav) {
+                        el = document.createElement('a');
+                        el.href = rule.href;
+                        el.className = 'sidebar-link';
+                        el.setAttribute('data-i18n', rule.i18nKey);
+                        el.textContent = uiTrans[rule.i18nKey] || rule.href.replace('/', '');
+                        el.style.display = 'none';
+                        nav.appendChild(el);
+                    }
+                });
+
+                // Show allowed links
+                linkRules.forEach(rule => {
+                    const el = nav ? nav.querySelector(`a[href="${rule.href}"]`) : null;
+                    if (!el) return;
+                    if (rule.any.some(p => perms.has(p))) {
+                        el.style.display = '';
+                    }
+                });
+            } catch {}
+        }
+
         // Initialize essentials on DOM ready
         document.addEventListener('DOMContentLoaded', function() {
             initGlobalLanguageSelector();
             updateSidebarActiveState();
             initSidebarScrollPersistence();
+            applyCustomRolePermissions();
         });
     </script>
 
