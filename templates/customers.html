@@ -229,6 +229,18 @@
             font-size: 12px;
             font-weight: 500;
         }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .header h1 { font-size: 1.8rem; }
+            .header > div { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+            .header > div .btn { flex: 1 1 100%; width: 100%; }
+            .customers-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .customers-table th, .customers-table td { padding: 8px 6px; font-size: 12px; min-width: 100px; }
+            .customers-table th:last-child, .customers-table td:last-child { min-width: 160px; }
+        }
+        @media (max-width: 480px) {
+            .customers-table th, .customers-table td { padding: 6px 4px; font-size: 11px; }
+        }
     </style>
 {% endblock %}
 

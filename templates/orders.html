@@ -48,60 +48,16 @@
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
             transition: left 0.5s;
         }
-        .btn:hover::before {
-            left: 100%;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
-            color: white;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-        }
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            color: white;
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-        }
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4);
-        }
-        .orders-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .orders-table th, .orders-table td {
-            padding: 16px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        .orders-table th {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .orders-table tbody tr:hover {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        }
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-            text-transform: capitalize;
-            display: inline-block;
-        }
+        .btn:hover::before { left: 100%; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%); color: white; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3); }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(108, 117, 125, 0.4); }
+        .orders-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .orders-table th, .orders-table td { padding: 16px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .orders-table th { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .orders-table tbody tr:hover { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white; text-transform: capitalize; display: inline-block; }
         .status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
         .status-confirmed { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
         .status-completed { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
@@ -109,204 +65,46 @@
         .status-cooking { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
         .status-ready { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
         .status-served { background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%); }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            overflow-y: auto;
-            animation: modalFadeIn 0.3s ease-out;
-        }
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .modal-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            margin: 30px auto;
-            padding: 35px;
-            border-radius: 20px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: modalSlideIn 0.3s ease-out;
-        }
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-        }
-        .modal-header h2 {
-            margin: 0;
-            color: #2d3748;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .close-btn {
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .close-btn:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            color: white;
-            transform: scale(1.1);
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: white;
-            font-family: inherit;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        .order-items-section h4 {
-            margin-top: 0;
-            color: #2d3748;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        #orderItemsContainer .item-row {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; overflow-y: auto; animation: modalFadeIn 0.3s ease-out; }
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); margin: 30px auto; padding: 35px; border-radius: 20px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.2); animation: modalSlideIn 0.3s ease-out; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 2px solid rgba(102, 126, 234, 0.2); }
+        .modal-header h2 { margin: 0; color: #2d3748; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--secondary-color, #764ba2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .close-btn { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .close-btn:hover { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; transform: scale(1.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 16px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 10px; box-sizing: border-box; font-size: 14px; transition: all 0.3s ease; background: white; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .order-items-section h4 { margin-top: 0; color: #2d3748; font-size: 1.2rem; font-weight: 600; }
+        #orderItemsContainer .item-row { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 10px; border: 1px solid rgba(102, 126, 234, 0.1); }
         #orderItemsContainer .item-row select { flex: 3; }
         #orderItemsContainer .item-row input { flex: 1; }
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0,0,0,0.1);
-        }
+        .form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
 
         /* Mobile responsive table */
         @media (max-width: 768px) {
-            .orders-table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
+            .header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .header h1 { font-size: 1.8rem; }
+            .header > div { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+            .header > div .btn { flex: 1 1 100%; width: 100%; }
 
-            .orders-table th,
-            .orders-table td {
-                padding: 8px 6px;
-                font-size: 12px;
-                min-width: 80px;
-            }
-
-            .orders-table th:nth-child(1),
-            .orders-table td:nth-child(1) {
-                min-width: 60px;
-            }
-
-            .orders-table th:nth-child(6),
-            .orders-table td:nth-child(6) {
-                min-width: 120px;
-            }
-
-            .orders-table th:nth-child(7),
-            .orders-table td:nth-child(7) {
-                min-width: 150px;
-            }
-
-            /* Stack action buttons vertically on very small screens */
-            .orders-table td:last-child {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                align-items: flex-start;
-            }
-
-            .orders-table td:last-child button,
-            .orders-table td:last-child a {
-                width: 100%;
-                text-align: center;
-                font-size: 11px;
-                padding: 6px 8px;
-            }
+            .orders-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .orders-table th, .orders-table td { padding: 8px 6px; font-size: 12px; min-width: 80px; }
+            .orders-table th:nth-child(1), .orders-table td:nth-child(1) { min-width: 60px; }
+            .orders-table th:nth-child(6), .orders-table td:nth-child(6) { min-width: 120px; }
+            .orders-table th:nth-child(7), .orders-table td:nth-child(7) { min-width: 150px; }
+            .orders-table td:last-child { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+            .orders-table td:last-child button, .orders-table td:last-child a { width: 100%; text-align: center; font-size: 11px; padding: 6px 8px; }
         }
 
         @media (max-width: 480px) {
-            .orders-table th,
-            .orders-table td {
-                padding: 6px 4px;
-                font-size: 11px;
-            }
-
-            .orders-table th:nth-child(2),
-            .orders-table td:nth-child(2),
-            .orders-table th:nth-child(3),
-            .orders-table td:nth-child(3),
-            .orders-table th:nth-child(4),
-            .orders-table td:nth-child(4) {
-                display: none; /* Hide less important columns on very small screens */
-            }
-
-            .orders-table th:nth-child(5),
-            .orders-table td:nth-child(5) {
-                font-weight: bold;
-                color: #667eea;
-            }
+            .orders-table th, .orders-table td { padding: 6px 4px; font-size: 11px; }
+            .orders-table th:nth-child(2), .orders-table td:nth-child(2),
+            .orders-table th:nth-child(3), .orders-table td:nth-child(3),
+            .orders-table th:nth-child(4), .orders-table td:nth-child(4) { display: none; }
+            .orders-table th:nth-child(5), .orders-table td:nth-child(5) { font-weight: bold; color: #667eea; }
         }
     </style>
 {% endblock %}

@@ -293,6 +293,23 @@
         #customerSearchResults div:last-child {
             border-bottom: none;
         }
+        .reservations-wrapper { width: 100%; overflow-x: auto; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .header h1 { font-size: 1.8rem; }
+            .header > div { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+            .header > div .btn { flex: 1 1 100%; width: 100%; }
+
+            .reservations-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .reservations-table th, .reservations-table td { padding: 8px 6px; font-size: 12px; min-width: 90px; }
+            .reservations-table th:nth-child(1), .reservations-table td:nth-child(1) { min-width: 60px; }
+            .reservations-table th:last-child, .reservations-table td:last-child { min-width: 140px; }
+        }
+
+        @media (max-width: 480px) {
+            .reservations-table th, .reservations-table td { padding: 6px 4px; font-size: 11px; }
+        }
     </style>
 {% endblock %}
 

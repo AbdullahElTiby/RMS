@@ -530,6 +530,16 @@
 
 
         }
+
+        /* Edit Role Modal */
+        .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); z-index: 2000; overflow-y:auto; align-items:center; justify-content:center; }
+        .modal.show { display:flex; }
+        .modal-content { background: #ffffff; padding: 24px; border-radius: 14px; max-width: 680px; width: 92%; max-height: 85vh; overflow-y:auto; box-shadow: 0 24px 60px rgba(0,0,0,0.25); transform: scale(0.96); opacity: 0; transition: transform 0.18s ease, opacity 0.18s ease; }
+        .modal.show .modal-content { transform: scale(1); opacity: 1; }
+        .modal-header { display:flex; justify-content: space-between; align-items:center; margin-bottom:16px; }
+        .modal-header h3 { margin:0; font-size: 1.25rem; color:#2d3748; }
+        .modal-close { background:none; border:none; font-size:22px; cursor:pointer; }
+        body.modal-open { overflow: hidden; }
     </style>
 {% endblock %}
 
@@ -697,6 +707,17 @@
             </div>
             <div class="settings-card-content">
                 <div class="setting-group">
+                    <h4 data-i18n="existing_roles">Existing Roles</h4>
+                    <div style="margin-bottom: 15px;">
+                        <button type="button" onclick="loadRoles()" class="btn-save" style="font-size: 12px; padding: 8px 16px;">Refresh Roles</button>
+                    </div>
+                    <div id="rolesList" class="roles-list">
+                        <!-- Roles will be loaded here -->
+                        <p style="text-align: center; color: #6b7280; padding: 20px;">Loading roles...</p>
+                    </div>
+                </div>
+
+                <div class="setting-group">
                     <h4 data-i18n="create_new_role">Create New Role</h4>
                     <div class="setting-item">
                         <label for="newRoleName" data-i18n="role_name">Role Name</label>
@@ -798,17 +819,6 @@
                     </div>
                     <button type="button" class="btn-save" onclick="createRole()" data-i18n="create_role">Create Role</button>
                 </div>
-
-                <div class="setting-group">
-                    <h4 data-i18n="existing_roles">Existing Roles</h4>
-                    <div style="margin-bottom: 15px;">
-                        <button type="button" onclick="loadRoles()" class="btn-save" style="font-size: 12px; padding: 8px 16px;">Refresh Roles</button>
-                    </div>
-                    <div id="rolesList" class="roles-list">
-                        <!-- Roles will be loaded here -->
-                        <p style="text-align: center; color: #6b7280; padding: 20px;">Loading roles...</p>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -817,6 +827,39 @@
             <button type="button" class="btn-reset" onclick="resetSettings()" data-i18n="reset_to_defaults">Reset to Defaults</button>
         </div>
     </form>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="editRoleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-i18n="edit_role">Edit Role</h3>
+            <button class="modal-close" onclick="closeEditRoleModal()">&times;</button>
+        </div>
+        <form id="editRoleForm">
+            <input type="hidden" id="editRoleOriginalName">
+            <div class="form-row">
+                <div class="form-group">
+                    <label data-i18n="role_name_label">Role Name</label>
+                    <input type="text" id="editRoleName" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label data-i18n="role_description_label">Description</label>
+                    <input type="text" id="editRoleDescription">
+                </div>
+            </div>
+            <div class="setting-item">
+                <label data-i18n="permissions_label">Permissions</label>
+                <div id="editRolePermissions" class="permissions-grid"></div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="closeEditRoleModal()" data-i18n="cancel">Cancel</button>
+                <button type="submit" class="btn-save" data-i18n="save">Save</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 {% endblock %}
@@ -1129,7 +1172,16 @@
             system_admin: 'System Administrator',
             kitchen_permissions: 'Kitchen Permissions',
             manage_kitchen: 'Access Kitchen Display',
-            view_kitchen_reports: 'View Kitchen Reports'
+            view_kitchen_reports: 'View Kitchen Reports',
+            edit: 'Edit',
+            delete: 'Delete',
+            save: 'Save',
+            edit_role: 'Edit Role',
+            role_name_label: 'Role Name',
+            role_description_label: 'Description',
+            permissions_label: 'Permissions',
+            no_roles_found: 'No roles found. Create your first role above.',
+            cancel: 'Cancel'
         },
         ar: {
             settings: 'الإعدادات',
@@ -1277,7 +1329,16 @@
             export_reports: 'تصدير التقارير',
             system_permissions: 'صلاحيات النظام',
             manage_settings: 'إدارة الإعدادات',
-            system_admin: 'مدير النظام'
+            system_admin: 'مدير النظام',
+            edit: 'تعديل',
+            delete: 'حذف',
+            save: 'حفظ',
+            edit_role: 'تعديل الدور',
+            role_name_label: 'اسم الدور',
+            role_description_label: 'الوصف',
+            permissions_label: 'الصلاحيات',
+            no_roles_found: 'لم يتم العثور على أدوار. أنشئ أول دور أعلاه.',
+            cancel: 'إلغاء'
         },
         tr: {
             settings: 'Ayarlar',
@@ -1425,7 +1486,16 @@
             export_reports: 'Raporları Dışa Aktar',
             system_permissions: 'Sistem İzinleri',
             manage_settings: 'Ayarları Yönet',
-            system_admin: 'Sistem Yöneticisi'
+            system_admin: 'Sistem Yöneticisi',
+            edit: 'Düzenle',
+            delete: 'Sil',
+            save: 'Kaydet',
+            edit_role: 'Rolü Düzenle',
+            role_name_label: 'Rol Adı',
+            role_description_label: 'Açıklama',
+            permissions_label: 'İzinler',
+            no_roles_found: 'Rol bulunamadı. İlk rolü yukarıda oluşturun.',
+            cancel: 'İptal'
         }
     };
 
@@ -1848,32 +1918,16 @@
 
     async function loadRoles() {
         if (isLoadingRoles) return; // Prevent multiple simultaneous loads
-
         isLoadingRoles = true;
-        console.log('Loading roles...');
+
+        const rolesList = document.getElementById('rolesList');
+        if (rolesList) {
+            rolesList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">Loading roles...</p>';
+        }
 
         try {
-            // Get current language from localStorage
-            const currentLang = localStorage.getItem('lang') || 'en';
-            const apiUrl = `/api/roles?lang=${currentLang}`;
-            console.log('Fetching from:', apiUrl);
-
-            const response = await fetch(apiUrl);
-
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
-            if (!response.ok) {
-                console.error('Failed to load roles:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                displayRoles([]); // Show empty list if API fails
-                return;
-            }
-
-            const roles = await response.json();
-            console.log('Roles loaded:', roles);
-            displayRoles(roles);
+            const roles = await fetchRolesWithRetry(3);
+            displayRoles(roles || []);
         } catch (error) {
             console.error('Error loading roles:', error);
             displayRoles([]); // Show empty list on error
@@ -1882,12 +1936,34 @@
         }
     }
 
+    async function fetchRolesWithRetry(retries) {
+        // Get current language from localStorage
+        const currentLang = localStorage.getItem('lang') || 'en';
+        const cacheBuster = Date.now();
+        const apiUrl = `/api/roles?lang=${currentLang}&_=${cacheBuster}`;
+
+        try {
+            const response = await fetch(apiUrl, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            if (retries > 0) {
+                // Exponential backoff
+                const delay = 250 * Math.pow(2, 3 - retries);
+                await new Promise(r => setTimeout(r, delay));
+                return fetchRolesWithRetry(retries - 1);
+            }
+            throw err;
+        }
+    }
+
     function displayRoles(roles) {
         const rolesList = document.getElementById('rolesList');
+        if (!rolesList) return;
         rolesList.innerHTML = '';
 
-        if (roles.length === 0) {
-            rolesList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No roles found. Create your first role above.</p>';
+        if (!roles || roles.length === 0) {
+            rolesList.innerHTML = `<p style="text-align: center; color: #6b7280; padding: 20px;">${t('no_roles_found') || 'No roles found. Create your first role above.'}</p>`;
             return;
         }
 
@@ -1901,17 +1977,27 @@
                         <p class="role-description">${role.description || 'No description'}</p>
                     </div>
                     <div class="role-actions">
-                        <button class="btn-edit" onclick="editRole('${role.name}')">Edit</button>
-                        <button class="btn-delete" onclick="deleteRole('${role.name}')">Delete</button>
+                        <button type="button" class="btn-edit" onclick="editRole('${role.name}')">${t('edit')}</button>
+                        <button type="button" class="btn-delete" onclick="deleteRole('${role.name}')">${t('delete')}</button>
                     </div>
                 </div>
                 <div class="role-permissions">
-                    ${role.permissions.map(perm => `<span class="permission-tag">${formatPermissionName(perm)}</span>`).join('')}
+                    ${(role.permissions || []).map(perm => `<span class="permission-tag">${formatPermissionName(perm)}</span>`).join('')}
                 </div>
             `;
             rolesList.appendChild(roleItem);
         });
     }
+
+    // Hook into language change and visibility to refresh roles automatically
+    window.addEventListener('languageChanged', () => {
+        if (!isLoadingRoles) loadRoles();
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !isLoadingRoles) {
+            loadRoles();
+        }
+    });
 
     function formatPermissionName(permission) {
         return permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -1969,15 +2055,94 @@
         }
     }
 
-    async function editRole(roleName) {
-        // This would open an edit modal/form - for now, just show an alert
-        alert(t('edit_role_functionality') + ': ' + roleName);
-        // In a full implementation, you would:
-        // 1. Fetch the role details
-        // 2. Populate a form with current values
-        // 3. Show the form
-        // 4. Save changes via PUT request
+    // Build a reusable permissions list for edit modal
+    const ALL_PERMISSIONS = [
+        'view_menu','edit_menu','manage_categories','take_orders','view_orders','manage_orders','view_inventory','manage_inventory','view_staff','manage_staff','view_reports','export_reports','manage_kitchen','view_kitchen_reports','manage_settings','system_admin'
+    ];
+
+    function openEditRoleModal(role) {
+        document.getElementById('editRoleOriginalName').value = role.name;
+        document.getElementById('editRoleName').value = role.name;
+        document.getElementById('editRoleDescription').value = role.description || '';
+        const container = document.getElementById('editRolePermissions');
+        container.innerHTML = '';
+        ALL_PERMISSIONS.forEach(perm => {
+            const wrap = document.createElement('div');
+            wrap.className = 'checkbox-group';
+            wrap.innerHTML = `
+                <input type="checkbox" id="edit_perm_${perm}" value="${perm}" ${Array.isArray(role.permissions) && role.permissions.includes(perm) ? 'checked' : ''}>
+                <label for="edit_perm_${perm}">${formatPermissionName(perm)}</label>
+            `;
+            container.appendChild(wrap);
+        });
+        const modal = document.getElementById('editRoleModal');
+        modal.classList.add('show');
+        document.body.classList.add('modal-open');
     }
+
+    function closeEditRoleModal(){
+        const modal = document.getElementById('editRoleModal');
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+    }
+
+    // Close when clicking backdrop
+    document.addEventListener('click', function(e){
+        const modal = document.getElementById('editRoleModal');
+        if (!modal) return;
+        if (modal.classList.contains('show')) {
+            const content = modal.querySelector('.modal-content');
+            if (e.target === modal && !content.contains(e.target)) {
+                closeEditRoleModal();
+            }
+        }
+    });
+
+    async function editRole(roleName) {
+        // Fetch a single role (or from the list already loaded)
+        try {
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const res = await fetch(`/api/roles/${roleName}?lang=${currentLang}`);
+            if (res.ok) {
+                const role = await res.json();
+                openEditRoleModal(role);
+            } else {
+                // Fallback: build minimal role from name
+                openEditRoleModal({ name: roleName, description: '', permissions: [] });
+            }
+        } catch {
+            openEditRoleModal({ name: roleName, description: '', permissions: [] });
+        }
+    }
+
+    document.getElementById('editRoleForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        const originalName = document.getElementById('editRoleOriginalName').value;
+        const name = document.getElementById('editRoleName').value.trim();
+        const description = document.getElementById('editRoleDescription').value.trim();
+        const permissions = Array.from(document.querySelectorAll('#editRolePermissions input[type="checkbox"]:checked')).map(cb => cb.value);
+        if (!name) { alert('Role name is required'); return; }
+
+        try {
+            const currentLang = localStorage.getItem('lang') || 'en';
+            const res = await fetch(`/api/roles/${originalName}?lang=${currentLang}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description, permissions })
+            });
+            if (res.ok) {
+                closeEditRoleModal();
+                await loadRoles();
+                alert('Role updated successfully');
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || 'Failed to update role');
+            }
+        } catch (err) {
+            console.error('Update role error', err);
+            alert('Failed to update role');
+        }
+    });
 
     async function deleteRole(roleName) {
         if (!confirm(t('confirm_delete_role') + ' "' + roleName + '"?')) {
